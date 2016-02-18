@@ -38,40 +38,45 @@ namespace Cv {
 
 	void ImageFilter::SetKernel(FilterType filterType)
 	{
+		std::fill(std::begin(kernel), std::end(kernel), 0);
+
 		switch (filterType)
 		{
 		case Cv::Mean:
-			this->kernel = &Kernel::Mean[0][0];
+			std::copy(&Kernel::Mean[0][0], &Kernel::Mean[0][0] + kernelHeight*kernelWidth, &kernel[0][0]);
 			break;
 		case Cv::WeightedMean:
-			this->kernel = &Kernel::WeightedMean[0][0];
+			std::copy(&Kernel::WeightedMean[0][0], &Kernel::WeightedMean[0][0] + kernelHeight*kernelWidth, &kernel[0][0]);
 			break;
 		case Cv::Median:
-			this->kernel = &Kernel::Median[0][0];
+			Kernel::GenerateMedianKernel();
+			std::copy(&Kernel::Median[0][0], &Kernel::Median[0][0] + kernelHeight*kernelWidth, &kernel[0][0]);
 			break;
 		case Cv::Gaussian:
-			this->kernel = &Kernel::Gaussian[0][0];
+			Kernel::GenerateGaussianKernel();
+			std::copy(&Kernel::Gaussian[0][0], &Kernel::Gaussian[0][0] + kernelHeight*kernelWidth, &kernel[0][0]);
 			break;
 		case Cv::Laplacian:
-			this->kernel = &Kernel::Laplacian[0][0];
+			Kernel::GenerateMinusLaplacianKernel();
+			std::copy(&Kernel::Laplacian[0][0], &Kernel::Laplacian[0][0] + kernelHeight*kernelWidth, &kernel[0][0]);
 			break;
 		case Cv::MinusLaplacian:
-			this->kernel = &Kernel::MinusLaplacian[0][0];
+			std::copy(&Kernel::MinusLaplacian[0][0], &Kernel::MinusLaplacian[0][0] + kernelHeight*kernelWidth, &kernel[0][0]);
 			break;
 		case Cv::DirectionalH:
-			this->kernel = &Kernel::DirectionalH[0][0];
+			std::copy(&Kernel::DirectionalH[0][0], &Kernel::DirectionalH[0][0] + kernelHeight*kernelWidth, &kernel[0][0]);
 			break;
 		case Cv::DirectionalV:
-			this->kernel = &Kernel::DirectionalV[0][0];
+			std::copy(&Kernel::DirectionalV[0][0], &Kernel::DirectionalV[0][0] + kernelHeight*kernelWidth, &kernel[0][0]);
 			break;
 		case Cv::SobelCols:
-			this->kernel = &Kernel::SobelCols[0][0];
+			std::copy(&Kernel::SobelCols[0][0], &Kernel::SobelCols[0][0] + kernelHeight*kernelWidth, &kernel[0][0]);
 			break;
 		case Cv::SobelRows:
-			this->kernel = &Kernel::SobelRows[0][0];
+			std::copy(&Kernel::SobelRows[0][0], &Kernel::SobelRows[0][0] + kernelHeight*kernelWidth, &kernel[0][0]);
 			break;
 		default:
-			this->kernel = &Kernel::Identity[0][0];
+			std::copy(&Kernel::Identity[0][0], &Kernel::Identity[0][0] + kernelHeight*kernelWidth, &kernel[0][0]);
 			break;
 		}
 	}

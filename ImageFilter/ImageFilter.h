@@ -25,7 +25,7 @@ namespace Cv {
 		BitmapData* buffer;
 		Gdiplus::Rect* rect;
 
-		double* kernel;
+		double kernel[kernelHeight][kernelWidth];
 		int kernelDivisor;
 
 		int width;
