@@ -8,9 +8,9 @@ namespace Cv {
 	class Kernel {
 
 	public:
-		void GenerateMedianKernel();
-		void GenerateGaussianKernel();
-		void GenerateMinusLaplacianKernel();
+		void static GenerateMedianKernel();
+		void static GenerateGaussianKernel();
+		void static GenerateMinusLaplacianKernel();
 
 		double static Identity[kernelHeight][kernelWidth];
 		double static Mean[kernelHeight][kernelWidth];
