@@ -79,17 +79,29 @@ namespace Cv {
 			std::copy(&Kernel::Identity[0][0], &Kernel::Identity[0][0] + kernelHeight*kernelWidth, &kernel[0][0]);
 			break;
 		}
+
+		for (int i = 0; i < kernelHeight; i++)
+		{
+			for (int j = 0; j < kernelWidth; j++)
+			{
+				this->kernelDivisor += this->kernel[i][j];
+			}
+		}
 	}
 
-	bool ImageFilter::Filter(FilterType filterType)
+	bool ImageFilter::Filter(FilterType filterType, CorrectionMode correctionMode = CorrectionMode::Cut, double factor)
 	{
 		this->SetKernel(filterType);
+
+		if (factor < 1.0) {
+			factor = 1 / this->kernelDivisor;
+		};
 
 		this->origin->LockBits(this->rect, ImageLockMode::ImageLockModeRead, PixelFormat24bppRGB, this->buffer);
 		this->result = new Bitmap(this->width, this->height, PixelFormat24bppRGB);
 		this->result->LockBits(this->rect, ImageLockMode::ImageLockModeWrite, PixelFormat24bppRGB, this->bitmapData);
 
-		BYTE red = 0, green = 0, blue = 0;
+		double red = 0.0, green = 0.0, blue = 0.0;
 		Gdiplus::Color color;
 		Gdiplus::Color *newColor;
 		Gdiplus::Color *colorHolder;
@@ -101,29 +113,34 @@ namespace Cv {
 			{
 				//multiply every value of the filter with corresponding image pixel
 				for (int filterY = 0; filterY < kernelHeight; filterY++)
+				{
 					for (int filterX = 0; filterX < kernelWidth; filterX++)
 					{
 						int imageX = (x - kernelWidth / 2 + filterX + this->width) % this->width;
 						int imageY = (y - kernelHeight / 2 + filterY + this->height) % this->height;
-						red += image[imageY * this->width + imageX].r * kernel[filterY][filterX];
-						green += image[imageY * this->width + imageX].g * kernel[filterY][filterX];
-						blue += image[imageY * this->width + imageX].b * kernel[filterY][filterX];
-					}
 
-				//truncate values smaller than zero and larger than 255
-				result[y * w + x].r = min(max(int(factor * red + bias), 0), 255);
-				result[y * w + x].g = min(max(int(factor * green + bias), 0), 255);
-				result[y * w + x].b = min(max(int(factor * blue + bias), 0), 255);
+						this->origin->GetPixel(imageX, imageY, &color);
+						red += color.GetRed() * kernel[filterY][filterX];
+						green += color.GetGreen() * kernel[filterY][filterX];
+						blue += color.GetBlue() * kernel[filterY][filterX];
+					}
+				}
+
+				switch (correctionMode)
+				{
+				case Cv::Cut:
+					//truncate values smaller than zero and larger than 255
+					newColor = new Gdiplus::Color(min(max(int(factor * red), 0), 255), min(max(int(factor * green), 0), 255), min(max(int(factor * blue), 0), 255));
+					break;
+				case Cv::Saturate:
+					//take absolute value and truncate to 255
+					newColor = new Gdiplus::Color(min(abs(int(factor * red)), 255), min(abs(int(factor * green)), 255), min(abs(int(factor * blue)), 255));
+					break;
+				}
+
+				this->result->SetPixel(x, y, newColor);
 			}
 		}
-
-		//draw the result buffer to the screen
-		for (int y = 0; y < h; y++)
-			for (int x = 0; x < w; x++)
-			{
-				pset(x, y, result[y * w + x]);
-			}
-
 
 		this->origin->UnlockBits(this->buffer);
 		this->result->UnlockBits(this->bitmapData);

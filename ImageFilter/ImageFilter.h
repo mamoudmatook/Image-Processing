@@ -11,7 +11,7 @@ namespace Cv {
 		~ImageFilter();
 
 		bool SetImage(WCHAR *fileUri);
-		bool Filter(FilterType filterType);
+		bool Filter(FilterType filterType, CorrectionMode correctionMode, double factor);
 		bool Save(std::string filename);
 		Bitmap GetFilteredImage();
 
@@ -33,5 +33,9 @@ namespace Cv {
 
 		void SetKernel(FilterType filterType);
 		void GetImageDimensions();
+	};
+
+	enum CorrectionMode {
+		Cut, Saturate
 	};
 }
