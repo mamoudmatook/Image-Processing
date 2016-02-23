@@ -1,7 +1,7 @@
 #pragma once
 
-#define kernelHeight 3
-#define kernelWidth 3
+#define KERNEL_HEIGHT 3
+#define KERNEL_WIDTH 3
 
 namespace Cv {
 	
@@ -12,25 +12,30 @@ namespace Cv {
 		void static GenerateGaussianKernel();
 		void static GenerateMinusLaplacianKernel();
 
-		double static Identity[kernelHeight][kernelWidth];
-		double static Mean[kernelHeight][kernelWidth];
-		double static WeightedMean[kernelHeight][kernelWidth];
+		double static Identity[KERNEL_HEIGHT][KERNEL_WIDTH];
+		double static Mean[KERNEL_HEIGHT][KERNEL_WIDTH];
+		double static WeightedMean[KERNEL_HEIGHT][KERNEL_WIDTH];
 		//Generar por función
-		double static Median[kernelHeight][kernelWidth];
+		double static Median[KERNEL_HEIGHT][KERNEL_WIDTH];
 		//Generar por función
-		double static Gaussian[kernelHeight][kernelWidth];
+		double static Gaussian[KERNEL_HEIGHT][KERNEL_WIDTH];
 		double static sigma;
-		double static Laplacian[kernelHeight][kernelWidth];
+		double static Laplacian[KERNEL_HEIGHT][KERNEL_WIDTH];
 		//Generar por funcion
-		double static MinusLaplacian[kernelHeight][kernelWidth];
-		double static DirectionalH[kernelHeight][kernelWidth];
-		double static DirectionalV[kernelHeight][kernelWidth];
-		double static SobelCols[kernelHeight][kernelWidth];
-		double static SobelRows[kernelHeight][kernelWidth];
+		double static MinusLaplacian[KERNEL_HEIGHT][KERNEL_WIDTH];
+		double static DirectionalH[KERNEL_HEIGHT][KERNEL_WIDTH];
+		double static DirectionalV[KERNEL_HEIGHT][KERNEL_WIDTH];
+		double static SobelCols[KERNEL_HEIGHT][KERNEL_WIDTH];
+		double static SobelRows[KERNEL_HEIGHT][KERNEL_WIDTH];
+		double static MotionBlur[KERNEL_HEIGHT][KERNEL_WIDTH];
+		double static Emboss[KERNEL_HEIGHT][KERNEL_WIDTH];
+		double static bias;
+		double static Outline[KERNEL_HEIGHT][KERNEL_WIDTH];
+		double static factor;
 	};
 
 	enum FilterType
 	{
-		Mean, WeightedMean, Median, Gaussian, Laplacian, MinusLaplacian, DirectionalH, DirectionalV, SobelCols, SobelRows
+		Mean, WeightedMean, Median, Gaussian, Laplacian, MinusLaplacian, DirectionalH, DirectionalV, SobelCols, SobelRows, MotionBlur, Emboss, Outline
 	};
 }
