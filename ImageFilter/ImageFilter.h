@@ -1,7 +1,11 @@
 #pragma once
-#include <gdiplus.h>
+#include "stdafx.h"
 
 namespace Cv {
+
+	enum CorrectionMode {
+		Cut, Saturate
+	};
 
 	class ImageFilter {
 
@@ -11,31 +15,27 @@ namespace Cv {
 		~ImageFilter();
 
 		bool SetImage(WCHAR *fileUri);
-		bool Filter(FilterType filterType, CorrectionMode correctionMode, double factor);
-		bool Save(std::string filename);
-		Bitmap GetFilteredImage();
+		bool Filter(FilterType filterType, CorrectionMode correctionMode);
+		bool Save(WCHAR *filename);
+		Gdiplus::Bitmap GetFilteredImage();
 
 	private:
 		Gdiplus::GdiplusStartupInput gdiplusStartupInput;
 		ULONG_PTR gdiplusToken;
 
-		Bitmap* origin;
-		Bitmap* result;
-		BitmapData* bitmapData;
-		BitmapData* buffer;
+		Gdiplus::Bitmap* originalImage;
+		Gdiplus::Bitmap* filteredImage;
+		Gdiplus::BitmapData* filteredImageBuffer;
+		Gdiplus::BitmapData* OriginalImageBuffer;
 		Gdiplus::Rect* rect;
 
-		double kernel[kernelHeight][kernelWidth];
+		double kernel[KERNEL_HEIGHT][KERNEL_WIDTH];
 		int kernelDivisor;
 
-		int width;
-		int height;
+		int imageWidth;
+		int imageHeight;
 
 		void SetKernel(FilterType filterType);
 		void GetImageDimensions();
-	};
-
-	enum CorrectionMode {
-		Cut, Saturate
 	};
 }
