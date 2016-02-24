@@ -20,7 +20,7 @@ namespace Cv {
 		void FillBins();
 		void CDF();
 		void Draw();
-		void Equalize(EqualizationType equalizationType);
+		void Equalize(EqualizationType equalizationType, double alpha);
 		void Save(WCHAR* filename);
 
 		Gdiplus::Bitmap GetRedHistogram();
@@ -31,6 +31,9 @@ namespace Cv {
 	private:
 		Gdiplus::GdiplusStartupInput gdiplusStartupInput;
 		ULONG_PTR gdiplusToken;
+
+		long totalPixels;
+		Gdiplus::Color color;
 
 		std::vector<BYTE> red;
 		std::vector<BYTE> green;
@@ -43,8 +46,12 @@ namespace Cv {
 		double luminanceFrequency[BINS];
 
 		int frequencySize[4];
+
+		//Una posición por cada color
 		BYTE max[3];
 		BYTE min[3];
+		double maxLuminance;
+		double minLuminance;
 
 		int roundCdf[4][BINS];
 		double cdfValues[4][BINS];
