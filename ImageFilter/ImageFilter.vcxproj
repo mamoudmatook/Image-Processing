@@ -146,6 +146,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FilterTypes.h" />
+    <ClInclude Include="GrayScale.h" />
     <ClInclude Include="Histogram.h" />
     <ClInclude Include="ImageFilter.h" />
     <ClInclude Include="resource.h" />
@@ -168,6 +169,7 @@
       </PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="FilterTypes.cpp" />
+    <ClCompile Include="GrayScale.cpp" />
     <ClCompile Include="Histogram.cpp" />
     <ClCompile Include="ImageFilter.cpp" />
     <ClCompile Include="stdafx.cpp" />

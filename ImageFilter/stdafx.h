@@ -19,5 +19,6 @@
 #include <vector>
 #include <iostream>
 #include <gdiplus.h>
+#include <algorithm>
 
 #pragma comment(lib,"gdiplus.lib")
