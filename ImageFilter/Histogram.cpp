@@ -149,7 +149,7 @@ void Cv::Histogram::Save(WCHAR* filename)
 
 }
 
-Gdiplus::Bitmap Cv::Histogram::GetRedHistogram() 
+Gdiplus::Bitmap* Cv::Histogram::GetRedHistogram() 
 {
 	Gdiplus::Pen pen(Gdiplus::Color::Red, 1.0F);
 	Gdiplus::Bitmap* canvas = new Gdiplus::Bitmap(256, 256, PixelFormat24bppRGB);
@@ -170,9 +170,11 @@ Gdiplus::Bitmap Cv::Histogram::GetRedHistogram()
 	{
 		drawingBuffer->DrawLine(&pen, i, 0, i, this->redFrequency[i]);
 	}
+
+	return canvas;
 }
 
-Gdiplus::Bitmap Cv::Histogram::GetGreenHistogram() 
+Gdiplus::Bitmap* Cv::Histogram::GetGreenHistogram() 
 {
 	Gdiplus::Pen pen(Gdiplus::Color::Green, 1.0F);
 	Gdiplus::Bitmap* canvas = new Gdiplus::Bitmap(256, 256, PixelFormat24bppRGB);
@@ -193,9 +195,11 @@ Gdiplus::Bitmap Cv::Histogram::GetGreenHistogram()
 	{
 		drawingBuffer->DrawLine(&pen, i, 0, i, this->greenFrequency[i]);
 	}
+
+	return canvas;
 }
 
-Gdiplus::Bitmap Cv::Histogram::GetBlueHistogram() 
+Gdiplus::Bitmap* Cv::Histogram::GetBlueHistogram() 
 {
 	Gdiplus::Pen pen(Gdiplus::Color::Blue, 1.0F);
 	Gdiplus::Bitmap* canvas = new Gdiplus::Bitmap(256, 256, PixelFormat24bppRGB);
@@ -216,9 +220,32 @@ Gdiplus::Bitmap Cv::Histogram::GetBlueHistogram()
 	{
 		drawingBuffer->DrawLine(&pen, i, 0, i, this->blueFrequency[i]);
 	}
+
+	return canvas;
 }
 
-Gdiplus::Bitmap Cv::Histogram::GetLuminanceHistogram() 
+//TODO: this
+Gdiplus::Bitmap* Cv::Histogram::GetLuminanceHistogram() 
 {
+	Gdiplus::Pen pen(Gdiplus::Color::White, 1.0F);
+	Gdiplus::Bitmap* canvas = new Gdiplus::Bitmap(256, 256, PixelFormat24bppRGB);
+	Gdiplus::Graphics* drawingBuffer = Gdiplus::Graphics::FromImage(canvas);
 
+	//Obtener el tope de la gráfica
+	//TODO: Agregar el max de luminence
+	int height = 0;
+	for (int i = 0; i < 3; i++)
+	{
+		if (this->max[i] > height)
+		{
+			height = this->max[i];
+		}
+	}
+
+	for (int i = 0; i < 256; i++)
+	{
+		drawingBuffer->DrawLine(&pen, i, 0, i, this->blueFrequency[i]);
+	}
+
+	return canvas;
 }

@@ -23,10 +23,10 @@ namespace Cv {
 		void Equalize(EqualizationType equalizationType, double alpha);
 		void Save(WCHAR* filename);
 
-		Gdiplus::Bitmap GetRedHistogram();
-		Gdiplus::Bitmap GetGreenHistogram();
-		Gdiplus::Bitmap GetBlueHistogram();
-		Gdiplus::Bitmap GetLuminanceHistogram();
+		Gdiplus::Bitmap* GetRedHistogram();
+		Gdiplus::Bitmap* GetGreenHistogram();
+		Gdiplus::Bitmap* GetBlueHistogram();
+		Gdiplus::Bitmap* GetLuminanceHistogram();
 
 	private:
 		Gdiplus::GdiplusStartupInput gdiplusStartupInput;
