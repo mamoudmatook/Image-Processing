@@ -6,7 +6,7 @@
 namespace Cv {
 
 	enum EqualizationType {
-		Simple, Uniform, Exponential
+		Simple, Uniform, Exponential, General, DynamicRange, Stretching
 	};
 
 	class Histogram

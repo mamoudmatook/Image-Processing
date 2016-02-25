@@ -139,6 +139,14 @@ void Cv::Histogram::Equalize(EqualizationType equalizationType, double alpha = 1
 	case Cv::Exponential:
 		//(pixelMin) - (1/alpha) * ln(1 - (CDF / maxCDF))
 		break;
+	case Cv::General:
+		//round( ((CDF-CDFmin)/(totalPixels - CDFmin)) * 255 )
+		break;
+	case Cv::DynamicRange:
+		// (pixel - PixelMenor) * ((CDFmax - CDFMin) / (pixelMayor - pixelMenor)) + CDFMin
+		break;
+	case Cv::Stretching:
+		// ( (pixel - pixelMin) / (pixelMax - pixelMin) ) * 255 
 	default:
 		break;
 	}
