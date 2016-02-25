@@ -169,6 +169,7 @@
       </PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="FilterTypes.cpp" />
+    <ClCompile Include="GetEncoderClsid.h" />
     <ClCompile Include="GrayScale.cpp" />
     <ClCompile Include="Histogram.cpp" />
     <ClCompile Include="ImageFilter.cpp" />

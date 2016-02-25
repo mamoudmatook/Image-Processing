@@ -1,4 +1,5 @@
 #include "GrayScale.h"
+#include "GetEncoderClsid.h"
 
 Cv::GrayScale::GrayScale()
 {
@@ -14,6 +15,13 @@ Cv::GrayScale::~GrayScale()
 	delete this->grayImage;
 }
 
+/// <summary>
+/// Carga imagen de 24bits
+/// Almacena sus dimensiones
+/// Inicializa el contenedor de la nueva imagen
+/// </summary>
+/// <param name="fileUri"></param>
+/// <returns></returns>
 bool Cv::GrayScale::SetImage(WCHAR * fileUri)
 {
 	this->originalImage = new Gdiplus::Bitmap(fileUri);
@@ -32,16 +40,29 @@ bool Cv::GrayScale::SetImage(WCHAR * fileUri)
 
 bool Cv::GrayScale::Save(WCHAR * filename)
 {
-	return false;
+	try 
+	{
+		CLSID pngClsid;
+		Cv::GetEncoderClsid(L"image/png", &pngClsid);
+		this->grayImage->Save(filename, &pngClsid, NULL);
+	}
+	catch (...)
+	{
+		return false;
+	}
+	return true;
 }
 
+/// <summary>
+/// (max(RGB) + min(RGB)) / 2
+/// </summary>
 void Cv::GrayScale::Luminosity()
 {
-	//(max(RGB) + min(RGB)) / 2
 	BYTE colors[3] = {};
 	Gdiplus::Color color;
 	Gdiplus::Color* gray;
-	BYTE min, max, luminosityHolder = 0;
+	BYTE min, max, luminosityHolder;
+	min = max = luminosityHolder = 0;
 
 	for (int y = 0; y < this->imageHeight; y++)
 	{
@@ -67,9 +88,11 @@ void Cv::GrayScale::Luminosity()
 
 }
 
+/// <summary>
+/// (R+G+B) / 3
+/// </summary>
 void Cv::GrayScale::Mean()
 {
-	//(R+G+B) / 3
 	Gdiplus::Color color;
 	Gdiplus::Color* gray;
 	BYTE meanHolder = 0;
@@ -91,9 +114,11 @@ void Cv::GrayScale::Mean()
 	}
 }
 
+/// <summary>
+/// 0.3R + 0.59G + 0.11B
+/// </summary>
 void Cv::GrayScale::Luminance()
 {
-	//0.3R + 0.59G + 0.11B
 	Gdiplus::Color color;
 	Gdiplus::Color* gray;
 	BYTE luminanceHolder = 0;
@@ -120,4 +145,5 @@ void Cv::GrayScale::GetImageDimensions()
 {
 	this->imageWidth = this->originalImage->GetWidth();
 	this->imageHeight = this->originalImage->GetHeight();
+	this->totalPixels = this->imageWidth * this->imageHeight;
 }

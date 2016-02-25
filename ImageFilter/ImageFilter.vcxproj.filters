@@ -59,6 +59,9 @@
     <ClCompile Include="GrayScale.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="GetEncoderClsid.h">
+      <Filter>Header Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ImageFilter.rc">

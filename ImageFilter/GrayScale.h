@@ -7,7 +7,7 @@ namespace Cv {
 	public:
 		GrayScale();
 		~GrayScale();
-
+		
 		bool SetImage(WCHAR *fileUri);
 		bool Save(WCHAR *filename);
 
@@ -26,5 +26,6 @@ namespace Cv {
 
 		int imageWidth;
 		int imageHeight;
+		long totalPixels;
 	};
 }
