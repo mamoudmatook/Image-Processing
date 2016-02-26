@@ -97,11 +97,13 @@
 		}
 	}
 
-	bool Cv::ImageFilter::Filter(FilterType filterType, CorrectionMode correctionMode)
+	bool Cv::ImageFilter::Filter(FilterType filterType, CorrectionMode correctionMode, double sigma, double bias)
 	{
+		Kernel::sigma = sigma;
+		Kernel::bias = bias;
 		this->SetKernel(filterType);
 
-		double factor = 1 / this->kernelDivisor;
+		double factor = 1.0 / (double)this->kernelDivisor;
 
 		/*this->originalImage->LockBits(this->rect, Gdiplus::ImageLockMode::ImageLockModeRead, PixelFormat24bppRGB, this->OriginalImageBuffer);
 		this->filteredImage->LockBits(this->rect, Gdiplus::ImageLockMode::ImageLockModeWrite, PixelFormat24bppRGB, this->filteredImageBuffer);*/
