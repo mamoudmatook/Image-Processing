@@ -93,9 +93,6 @@ namespace Cv {
 		{-1, -1, -1}
 	};
 
-	void Kernel::GenerateMedianKernel()
-	{
-	}
 	void Kernel::GenerateGaussianKernel()
 	{
 		int coordinates[3][2] = 

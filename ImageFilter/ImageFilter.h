@@ -38,6 +38,7 @@ namespace Cv {
 		Gdiplus::Rect* rect;
 
 		void SetKernel(FilterType filterType);
+		void MedianFilter();
 		void GetImageDimensions();
 		int GetEncoderClsid(const WCHAR* format, CLSID* pClsid);
 	};

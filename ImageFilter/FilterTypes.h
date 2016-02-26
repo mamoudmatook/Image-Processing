@@ -9,7 +9,6 @@ namespace Cv {
 	class Kernel {
 
 	public:
-		void static GenerateMedianKernel();
 		void static GenerateGaussianKernel();
 		void static GenerateMinusLaplacianKernel();
 

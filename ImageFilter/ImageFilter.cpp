@@ -43,7 +43,6 @@
 			std::copy(&Kernel::WeightedMean[0][0], &Kernel::WeightedMean[0][0] + KERNEL_HEIGHT*KERNEL_WIDTH, &kernel[0][0]);
 			break;
 		case Cv::Median:
-			Kernel::GenerateMedianKernel();
 			std::copy(&Kernel::Median[0][0], &Kernel::Median[0][0] + KERNEL_HEIGHT*KERNEL_WIDTH, &kernel[0][0]);
 			break;
 		case Cv::Gaussian:
@@ -100,64 +99,131 @@
 
 	bool Cv::ImageFilter::Filter(FilterType filterType, CorrectionMode correctionMode, double sigma, double bias)
 	{
-		Kernel::sigma = sigma;
-		Kernel::bias = bias;
-		this->SetKernel(filterType);
-
-		double factor = 1.0 / (double)this->kernelDivisor;
-
-		/*this->originalImage->LockBits(this->rect, Gdiplus::ImageLockMode::ImageLockModeRead, PixelFormat24bppRGB, this->OriginalImageBuffer);
-		this->filteredImage->LockBits(this->rect, Gdiplus::ImageLockMode::ImageLockModeWrite, PixelFormat24bppRGB, this->filteredImageBuffer);*/
-
-		double red = 0.0, green = 0.0, blue = 0.0;
-		Gdiplus::Color color;
-		Gdiplus::Color *newColor;
-		/*Gdiplus::Color *colorHolder;*/
-
-		//algoritmo
-		for (int x = 0; x < this->imageWidth; x++)
-		{
-			for (int y = 0; y < this->imageHeight; y++)
-			{
-				red = 0.0, green = 0.0, blue = 0.0;
-
-				//Aplicar el filtro
-				for (int kernelY = 0; kernelY < KERNEL_HEIGHT; kernelY++)
-				{
-					for (int kernelX = 0; kernelX < KERNEL_WIDTH; kernelX++)
-					{
-						int imageX = (x - KERNEL_WIDTH / 2 + kernelX + this->imageWidth) % this->imageWidth;
-						int imageY = (y - KERNEL_HEIGHT / 2 + kernelY + this->imageHeight) % this->imageHeight;
-
-						this->originalImage->GetPixel(imageX, imageY, &color);
-						red += color.GetRed() * kernel[kernelY][kernelX];
-						green += color.GetGreen() * kernel[kernelY][kernelX];
-						blue += color.GetBlue() * kernel[kernelY][kernelX];
-					}
-				}
-
-				switch (correctionMode)
-				{
-				case Cv::Cut:
-					//truncate values smaller than zero and larger than 255
-					newColor = new Gdiplus::Color(min(max(int(factor * red + Kernel::bias), 0), 255), min(max(int(factor * green + Kernel::bias), 0), 255), min(max(int(factor * blue + Kernel::bias), 0), 255));
-					break;
-				case Cv::Saturate:
-					//take absolute value and truncate to 255
-					newColor = new Gdiplus::Color(min(abs(int(factor * red + Kernel::bias)), 255), min(abs(int(factor * green + Kernel::bias)), 255), min(abs(int(factor * blue + Kernel::bias)), 255));
-					break;
-				}
-
-				this->filteredImage->SetPixel(x, y, *newColor);
-
-				delete newColor;
-			}
+		if (filterType == Cv::FilterType::Median) {
+			this->MedianFilter();
 		}
+		else 
+		{
+			Kernel::sigma = sigma;
+			Kernel::bias = bias;
+			this->SetKernel(filterType);
 
-		/*this->originalImage->UnlockBits(this->OriginalImageBuffer);
-		this->filteredImage->UnlockBits(this->filteredImageBuffer);*/
+			double factor = 1.0 / (double)this->kernelDivisor;
 
-		return true;
+			/*this->originalImage->LockBits(this->rect, Gdiplus::ImageLockMode::ImageLockModeRead, PixelFormat24bppRGB, this->OriginalImageBuffer);
+			this->filteredImage->LockBits(this->rect, Gdiplus::ImageLockMode::ImageLockModeWrite, PixelFormat24bppRGB, this->filteredImageBuffer);*/
+
+			double red = 0.0, green = 0.0, blue = 0.0;
+			Gdiplus::Color color;
+			Gdiplus::Color *newColor;
+			/*Gdiplus::Color *colorHolder;*/
+
+			//algoritmo
+			for (int x = 0; x < this->imageWidth; x++)
+			{
+				for (int y = 0; y < this->imageHeight; y++)
+				{
+					red = 0.0, green = 0.0, blue = 0.0;
+
+					//Aplicar el filtro
+					for (int kernelY = 0; kernelY < KERNEL_HEIGHT; kernelY++)
+					{
+						for (int kernelX = 0; kernelX < KERNEL_WIDTH; kernelX++)
+						{
+							int imageX = (x - KERNEL_WIDTH / 2 + kernelX + this->imageWidth) % this->imageWidth;
+							int imageY = (y - KERNEL_HEIGHT / 2 + kernelY + this->imageHeight) % this->imageHeight;
+
+							this->originalImage->GetPixel(imageX, imageY, &color);
+							red += color.GetRed() * kernel[kernelY][kernelX];
+							green += color.GetGreen() * kernel[kernelY][kernelX];
+							blue += color.GetBlue() * kernel[kernelY][kernelX];
+						}
+					}
+
+					switch (correctionMode)
+					{
+					case Cv::Cut:
+						//truncate values smaller than zero and larger than 255
+						newColor = new Gdiplus::Color(min(max(int(factor * red + Kernel::bias), 0), 255), min(max(int(factor * green + Kernel::bias), 0), 255), min(max(int(factor * blue + Kernel::bias), 0), 255));
+						break;
+					case Cv::Saturate:
+						//take absolute value and truncate to 255
+						newColor = new Gdiplus::Color(min(abs(int(factor * red + Kernel::bias)), 255), min(abs(int(factor * green + Kernel::bias)), 255), min(abs(int(factor * blue + Kernel::bias)), 255));
+						break;
+					}
+
+					this->filteredImage->SetPixel(x, y, *newColor);
+
+					delete newColor;
+				}
+			}
+
+			/*this->originalImage->UnlockBits(this->OriginalImageBuffer);
+			this->filteredImage->UnlockBits(this->filteredImageBuffer);*/
+
+			return true;
+		}
+	}
+
+	void Cv::ImageFilter::MedianFilter()
+	{
+		//void insertionSort(int window[])
+		//{
+		//	int temp, i, j;
+		//	for (i = 0; i < 9; i++) {
+		//		temp = window[i];
+		//		for (j = i - 1; j >= 0 && temp < window[j]; j--) {
+		//			window[j + 1] = window[j];
+		//		}
+		//		window[j + 1] = temp;
+		//	}
+		//}
+		//Mat src, dst;
+
+		//// Load an image
+		//src = imread("book.png", CV_LOAD_IMAGE_GRAYSCALE);
+
+		//if (!src.data)
+		//{
+		//	return -1;
+		//}
+
+		////create a sliding window of size 9
+		//int window[9];
+
+		//dst = src.clone();
+		//for (int y = 0; y < src.rows; y++)
+		//	for (int x = 0; x < src.cols; x++)
+		//		dst.at<uchar>(y, x) = 0.0;
+
+		//for (int y = 1; y < src.rows - 1; y++) {
+		//	for (int x = 1; x < src.cols - 1; x++) {
+
+		//		// Pick up window element
+
+		//		window[0] = src.at<uchar>(y - 1, x - 1);
+		//		window[1] = src.at<uchar>(y, x - 1);
+		//		window[2] = src.at<uchar>(y + 1, x - 1);
+		//		window[3] = src.at<uchar>(y - 1, x);
+		//		window[4] = src.at<uchar>(y, x);
+		//		window[5] = src.at<uchar>(y + 1, x);
+		//		window[6] = src.at<uchar>(y - 1, x + 1);
+		//		window[7] = src.at<uchar>(y, x + 1);
+		//		window[8] = src.at<uchar>(y + 1, x + 1);
+
+		//		// sort the window to find median
+		//		insertionSort(window);
+
+		//		// assign the median to centered element of the matrix
+		//		dst.at<uchar>(y, x) = window[4];
+		//	}
+		//}
+
+		//namedWindow("final");
+		//imshow("final", dst);
+
+		//namedWindow("initial");
+		//imshow("initial", src);
 	}
 
 	bool Cv::ImageFilter::Save(WCHAR *filename)
