@@ -1,5 +1,4 @@
 #include "GrayScale.h"
-#include "GetEncoderClsid.h"
 
 Cv::GrayScale::GrayScale()
 {
@@ -43,7 +42,7 @@ bool Cv::GrayScale::Save(WCHAR * filename)
 	try 
 	{
 		CLSID pngClsid;
-		Cv::GetEncoderClsid(L"image/png", &pngClsid);
+		GetEncoderClsid(L"image/png", &pngClsid);
 		this->grayImage->Save(filename, &pngClsid, NULL);
 	}
 	catch (...)
@@ -146,4 +145,36 @@ void Cv::GrayScale::GetImageDimensions()
 	this->imageWidth = this->originalImage->GetWidth();
 	this->imageHeight = this->originalImage->GetHeight();
 	this->totalPixels = this->imageWidth * this->imageHeight;
+}
+
+int Cv::GrayScale::GetEncoderClsid(const WCHAR* format, CLSID* pClsid) {
+	UINT num = 0; // number of image encoders
+	UINT size = 0; // size of the image encoder array in bytes 
+
+	Gdiplus::ImageCodecInfo* pImageCodecInfo = NULL;
+	Gdiplus::GetImageEncodersSize(&num, &size);
+
+	if (size == 0) {
+		return -1; // Failure
+	}
+
+	pImageCodecInfo = (Gdiplus::ImageCodecInfo*)(malloc(size));
+
+	if (pImageCodecInfo == NULL) {
+		return -1; // Failure 
+	}
+
+	Gdiplus::GetImageEncoders(num, size, pImageCodecInfo);
+
+	for (UINT j = 0; j < num; ++j)
+	{
+		if (wcscmp(pImageCodecInfo[j].MimeType, format) == 0)
+		{
+			*pClsid = pImageCodecInfo[j].Clsid;
+			free(pImageCodecInfo);
+			return j; // Success 
+		}
+	}
+	free(pImageCodecInfo);
+	return 0; // Failure 
 }

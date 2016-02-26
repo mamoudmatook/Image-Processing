@@ -18,7 +18,6 @@
 #include <cmath>
 #include <vector>
 #include <iostream>
-#include <gdiplus.h>
 #include <algorithm>
-
+#include <gdiplus.h>
 #pragma comment(lib,"gdiplus.lib")

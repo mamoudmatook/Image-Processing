@@ -27,5 +27,7 @@ namespace Cv {
 		int imageWidth;
 		int imageHeight;
 		long totalPixels;
+
+		int GetEncoderClsid(const WCHAR* format, CLSID* pClsid);
 	};
 }
