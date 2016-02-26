@@ -44,7 +44,9 @@ namespace Cv {
 
 	//Generar por funcion
 	double Kernel::MinusLaplacian[KERNEL_HEIGHT][KERNEL_WIDTH] = {
-
+		{0, 0, 0},
+		{0, 0, 0},
+		{0, 0, 0}
 	};
 
 	double Kernel::DirectionalH[KERNEL_HEIGHT][KERNEL_WIDTH] = {
