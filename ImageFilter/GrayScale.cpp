@@ -3,8 +3,8 @@
 Cv::GrayScale::GrayScale()
 {
 	Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
-	ZeroMemory(this->originalImage, sizeof(Gdiplus::Bitmap));
-	ZeroMemory(this->grayImage, sizeof(Gdiplus::Bitmap));
+	//ZeroMemory(this->originalImage, sizeof(Gdiplus::Bitmap));
+	//ZeroMemory(this->grayImage, sizeof(Gdiplus::Bitmap));
 }
 
 Cv::GrayScale::~GrayScale()
@@ -23,9 +23,10 @@ Cv::GrayScale::~GrayScale()
 /// <returns></returns>
 bool Cv::GrayScale::SetImage(WCHAR * fileUri)
 {
-	this->originalImage = new Gdiplus::Bitmap(fileUri);
+	this->originalImage = Gdiplus::Bitmap::FromFile(fileUri);
 
-	if (this->originalImage->GetPixelFormat() != PixelFormat24bppRGB) 
+	Gdiplus::PixelFormat pixelFormat = this->originalImage->GetPixelFormat();
+	if (pixelFormat != PixelFormat24bppRGB) 
 	{
 		return false;
 	}
@@ -39,17 +40,29 @@ bool Cv::GrayScale::SetImage(WCHAR * fileUri)
 
 bool Cv::GrayScale::Save(WCHAR * filename)
 {
-	try 
+	try
 	{
-		CLSID pngClsid;
-		GetEncoderClsid(L"image/png", &pngClsid);
-		this->grayImage->Save(filename, &pngClsid, NULL);
+		CLSID jpgClsid;
+		GetEncoderClsid(L"image/png", &jpgClsid);
+		this->grayImage->Save(filename, &jpgClsid, NULL);
 	}
 	catch (...)
 	{
 		return false;
 	}
 	return true;
+}
+
+Gdiplus::Bitmap* Cv::GrayScale::GetFilteredImage() {
+	return this->grayImage;
+}
+
+void Cv::GrayScale::GetImageDimensions()
+{
+	this->imageWidth = this->originalImage->GetWidth();
+	this->imageHeight = this->originalImage->GetHeight();
+	this->totalPixels = this->imageWidth * this->imageHeight;
+	this->rect = new Gdiplus::Rect(0, 0, this->imageWidth, this->imageHeight);
 }
 
 /// <summary>
@@ -59,7 +72,6 @@ void Cv::GrayScale::Luminosity()
 {
 	BYTE colors[3] = {};
 	Gdiplus::Color color;
-	Gdiplus::Color* gray;
 	BYTE min, max, luminosityHolder;
 	min = max = luminosityHolder = 0;
 
@@ -77,14 +89,9 @@ void Cv::GrayScale::Luminosity()
 			min = *std::min_element(colors, colors + 3);
 			luminosityHolder = round((max + min) / 2);
 
-			gray = new Gdiplus::Color(luminosityHolder, luminosityHolder, luminosityHolder);
-
-			this->grayImage->SetPixel(x, y, *gray);
-
-			delete gray;
+			this->grayImage->SetPixel(x, y, Gdiplus::Color(luminosityHolder, luminosityHolder, luminosityHolder));
 		}
 	}
-
 }
 
 /// <summary>
@@ -93,7 +100,6 @@ void Cv::GrayScale::Luminosity()
 void Cv::GrayScale::Mean()
 {
 	Gdiplus::Color color;
-	Gdiplus::Color* gray;
 	BYTE meanHolder = 0;
 
 	for (int y = 0; y < this->imageHeight; y++)
@@ -104,11 +110,7 @@ void Cv::GrayScale::Mean()
 
 			meanHolder = round((color.GetRed() + color.GetGreen() + color.GetBlue()) / 3);
 
-			gray = new Gdiplus::Color(meanHolder, meanHolder, meanHolder);
-
-			this->grayImage->SetPixel(x, y, *gray);
-
-			delete gray;
+			this->grayImage->SetPixel(x, y, Gdiplus::Color(meanHolder, meanHolder, meanHolder));
 		}
 	}
 }
@@ -119,9 +121,13 @@ void Cv::GrayScale::Mean()
 void Cv::GrayScale::Luminance()
 {
 	Gdiplus::Color color;
-	Gdiplus::Color* gray;
 	BYTE luminanceHolder = 0;
+	//UINT* pixels;
 	
+	//this->originalImage->LockBits(this->rect, Gdiplus::ImageLockMode::ImageLockModeRead, PixelFormat24bppRGB, this->originalImageBuffer);
+	//this->grayImage->LockBits(this->rect, Gdiplus::ImageLockMode::ImageLockModeWrite, PixelFormat24bppRGB, &this->grayImageBuffer);
+	//pixels = (UINT*)this->grayImageBuffer.Scan0;
+
 	for (int y = 0; y < this->imageHeight; y++) 
 	{
 		for (int x = 0; x < this->imageWidth; x++)
@@ -131,20 +137,13 @@ void Cv::GrayScale::Luminance()
 			luminanceHolder = round((color.GetRed() * 0.30F) + (color.GetBlue() * 0.59F) + (color.GetGreen() * 0.11F));
 			if (luminanceHolder > 255) luminanceHolder = 255;
 
-			gray = new Gdiplus::Color(luminanceHolder, luminanceHolder, luminanceHolder);
-
-			this->grayImage->SetPixel(x, y, *gray);
-
-			delete gray;
+			this->grayImage->SetPixel(x, y, Gdiplus::Color(luminanceHolder, luminanceHolder, luminanceHolder));
+			//pixels[this->imageHeight * this->grayImageBuffer.Stride / 3 + this->imageWidth] = 0xff00ff00;//((luminanceHolder & 0xff) << 16) + ((luminanceHolder & 0xff) << 8) + (luminanceHolder & 0xff);
 		}
 	}
-}
 
-void Cv::GrayScale::GetImageDimensions()
-{
-	this->imageWidth = this->originalImage->GetWidth();
-	this->imageHeight = this->originalImage->GetHeight();
-	this->totalPixels = this->imageWidth * this->imageHeight;
+	//this->originalImage->UnlockBits(this->originalImageBuffer);
+	//this->grayImage->UnlockBits(&this->grayImageBuffer);
 }
 
 int Cv::GrayScale::GetEncoderClsid(const WCHAR* format, CLSID* pClsid) {

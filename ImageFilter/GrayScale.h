@@ -10,6 +10,7 @@ namespace Cv {
 		
 		bool SetImage(WCHAR *fileUri);
 		bool Save(WCHAR *filename);
+		Gdiplus::Bitmap* GetFilteredImage();
 
 		void Luminosity();
 		void Mean();
@@ -21,12 +22,15 @@ namespace Cv {
 
 		Gdiplus::Bitmap* originalImage;
 		Gdiplus::Bitmap* grayImage;
+		Gdiplus::BitmapData originalImageBuffer;
+		Gdiplus::BitmapData grayImageBuffer;
 
 		void GetImageDimensions();
 
 		int imageWidth;
 		int imageHeight;
 		long totalPixels;
+		Gdiplus::Rect* rect;
 
 		int GetEncoderClsid(const WCHAR* format, CLSID* pClsid);
 	};
