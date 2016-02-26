@@ -1,4 +1,5 @@
 #pragma once
+#include "stdafx.h"
 
 #define KERNEL_HEIGHT 3
 #define KERNEL_WIDTH 3
@@ -37,5 +38,9 @@ namespace Cv {
 	enum FilterType
 	{
 		Mean, WeightedMean, Median, Gaussian, Laplacian, MinusLaplacian, DirectionalH, DirectionalV, SobelCols, SobelRows, MotionBlur, Emboss, Outline
+	};
+
+	static WCHAR* FilterNames[13] = {
+		L"Mean", L"WeightedMean", L"Median", L"Gaussian", L"Laplacian", L"MinusLaplacian", L"DirectionalH", L"DirectionalV", L"SobelCols", L"SobelRows", L"MotionBlur", L"Emboss", L"Outline"
 	};
 }
