@@ -19,49 +19,57 @@ namespace Cv {
 		bool SetImage(WCHAR* fileUri);
 		void FillBins();
 		void CDF();
-		void Draw();
+		void DrawHistogram();
 		void Equalize(EqualizationType equalizationType, double alpha);
-		void Save(WCHAR* filename);
+		bool Save(std::wstring filename);
 
 		Gdiplus::Bitmap* GetRedHistogram();
 		Gdiplus::Bitmap* GetGreenHistogram();
 		Gdiplus::Bitmap* GetBlueHistogram();
 		Gdiplus::Bitmap* GetLuminanceHistogram();
+		Gdiplus::Bitmap* GetEqualizedImage();
 
 	private:
 		Gdiplus::GdiplusStartupInput gdiplusStartupInput;
 		ULONG_PTR gdiplusToken;
 
 		long totalPixels;
+		int imageWidth;
+		int imageHeight;
+		Gdiplus::Rect* rect;
+
 		Gdiplus::Color color;
 
 		std::vector<BYTE> red;
 		std::vector<BYTE> green;
 		std::vector<BYTE> blue;
-		std::vector<double> luminance;
+		std::vector<BYTE> luminance;
 
 		BYTE redFrequency[BINS];
 		BYTE greenFrequency[BINS];
 		BYTE blueFrequency[BINS];
-		double luminanceFrequency[BINS];
+		BYTE luminanceFrequency[BINS];
 
 		int frequencySize[4];
 
 		//Una posición por cada color
-		BYTE max[3];
-		BYTE min[3];
+		BYTE max[4];
+		BYTE min[4];
 		double maxLuminance;
 		double minLuminance;
 
 		int roundCdf[4][BINS];
-		double cdfValues[4][BINS];
-		double minCdf[4];
+		int cdfValues[4][BINS];
+		int minCdf[4];
 
 		Gdiplus::Bitmap* originalImage;
 		Gdiplus::Bitmap* equalizedImage;
 		Gdiplus::Bitmap* histogramCanvas[4];
-		Gdiplus::BitmapData* histogramCanvasBuffer[4];
-		Gdiplus::BitmapData* equalizedImageBuffer;
-		Gdiplus::BitmapData* originalImageBuffer;
+		Gdiplus::BitmapData histogramCanvasBuffer[4];
+		Gdiplus::BitmapData equalizedImageBuffer;
+		Gdiplus::BitmapData originalImageBuffer;
+
+		void GetImageDimensions();
+		int GetEncoderClsid(const WCHAR* format, CLSID* pClsid);
 	};
 }

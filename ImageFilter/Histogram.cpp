@@ -4,72 +4,73 @@
 Cv::Histogram::Histogram() 
 {
 	Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
-	ZeroMemory(this->originalImage, sizeof(Gdiplus::Bitmap));
-	ZeroMemory(this->equalizedImage, sizeof(Gdiplus::Bitmap));
-
-	std::fill(this->redFrequency, this->redFrequency + BINS, 0);
+	//La inicialización provoca un error en el heap al cargar la image...
+	/*std::fill(this->redFrequency, this->redFrequency + BINS, 0);
 	std::fill(this->greenFrequency, this->greenFrequency + BINS, 0);
 	std::fill(this->blueFrequency, this->blueFrequency + BINS, 0);
 	std::fill(this->luminanceFrequency, this->luminanceFrequency + BINS, 0);
 	std::fill(this->frequencySize, this->frequencySize + 4, 0);
-	std::fill(this->min, this->min + 3, 0);
-	std::fill(this->max, this->max + 3, 0);
+	std::fill(this->min, this->min + 4, 0);
+	std::fill(this->max, this->max + 4, 0);
 	this->maxLuminance = this->minLuminance = 0;
 	std::fill(&roundCdf[0][0], &roundCdf[4][BINS], 0);
 	std::fill(&cdfValues[0][0], &cdfValues[4][BINS], 0);
-	std::fill(minCdf, minCdf + 4, 0);
+	std::fill(minCdf, minCdf + 4, 0);*/
 }
 
 Cv::Histogram::~Histogram() 
 {
 	Gdiplus::GdiplusShutdown(this->gdiplusToken);
-	ZeroMemory(this->originalImage, sizeof(Gdiplus::Bitmap));
-	ZeroMemory(this->equalizedImage, sizeof(Gdiplus::Bitmap));
+	delete this->originalImage;
+	delete this->equalizedImage;
+	delete this->rect;
+	delete this->histogramCanvas;
 }
 
-bool Cv::Histogram::SetImage(WCHAR* fileUri) 
+bool Cv::Histogram::SetImage(WCHAR * fileUri) 
 {
-	this->originalImage = new Gdiplus::Bitmap(fileUri);
+	this->originalImage = Gdiplus::Bitmap::FromFile(fileUri);
 
 	if (this->originalImage->GetPixelFormat() != PixelFormat24bppRGB) 
 	{
 		return false;
 	}
 
-	this->totalPixels = this->originalImage->GetWidth() * this->originalImage->GetHeight();
+	this->GetImageDimensions();
 
-	double luminanceHolder = 0.0;
+	int luminanceHolder = 0;
 
-	for (int y = 0; y < this->originalImage->GetHeight(); y++)
+	for (int y = 0; y < this->imageHeight; y++)
 	{
-		for (int x = 0; x < this->originalImage->GetWidth(); x++)
+		for (int x = 0; x < this->imageWidth; x++)
 		{
-			this->originalImage->GetPixel(x, y, &color);
+			this->originalImage->GetPixel(x, y, &this->color);
 
-			luminanceHolder = (color.GetRed() * 0.30F) + (color.GetBlue() * 0.59F) + (color.GetGreen() * 0.11F);
+			//Al asignar a int hace el corte, como byte no jala
+			luminanceHolder = (this->color.GetRed() * 0.30F) + (this->color.GetBlue() * 0.59F) + (this->color.GetGreen() * 0.11F);
 
-			this->red.push_back(color.GetRed());
-			this->green.push_back(color.GetGreen());
-			this->blue.push_back(color.GetBlue());
+			this->red.push_back(this->color.GetRed());
+			this->green.push_back(this->color.GetGreen());
+			this->blue.push_back(this->color.GetBlue());
 			this->luminance.push_back(luminanceHolder);
 
-			//obtener máximos y mínimos
+			//obtener máximos y mínimos.
 			if (color.GetRed() > max[0]) max[0] = color.GetRed();
 			if (color.GetGreen() > max[1]) max[1] = color.GetGreen();
 			if (color.GetBlue() > max[2]) max[2] = color.GetBlue();
-			if (luminanceHolder > maxLuminance) maxLuminance = luminanceHolder;
+			if (luminanceHolder > max[3]) max[3] = luminanceHolder;
 
 			if (color.GetRed() < min[0]) min[0] = color.GetRed();
 			if (color.GetGreen() < min[1]) min[1] = color.GetGreen();
 			if (color.GetBlue() < min[2]) min[2] = color.GetBlue();
-			if (luminanceHolder < minLuminance) minLuminance = luminanceHolder;
+			if (luminanceHolder < min[3]) min[3] = luminanceHolder;
 		}
 	}
 
 	frequencySize[0] = max[0] - min[0] + 1;
 	frequencySize[1] = max[1] - min[1] + 1;
 	frequencySize[2] = max[2] - min[2] + 1;
-	frequencySize[3] = maxLuminance - minLuminance + 1;
+	frequencySize[3] = max[3] - min[3] + 1;
 
 	return true;
 }
@@ -96,7 +97,7 @@ void Cv::Histogram::FillBins()
 	}
 	for (int l = 0; l < this->luminance.size(); l++) 
 	{
-		this->luminanceFrequency[(int)ceil(this->luminance[l])]++;
+		this->luminanceFrequency[this->luminance[l]]++;
 	}
 }
 
@@ -121,9 +122,60 @@ void Cv::Histogram::CDF() {
 	}
 }
 
-void Cv::Histogram::Draw() 
+void Cv::Histogram::DrawHistogram() 
 {
+	Gdiplus::Pen redPen(Gdiplus::Color::Red, 1.0F);
+	this->histogramCanvas[0] = new Gdiplus::Bitmap(256, 256, PixelFormat24bppRGB);
+	Gdiplus::Graphics* redDrawingBuffer = Gdiplus::Graphics::FromImage(this->histogramCanvas[0]);
 
+	Gdiplus::Pen greenPen(Gdiplus::Color::Green, 1.0F);
+	this->histogramCanvas[1] = new Gdiplus::Bitmap(256, 256, PixelFormat24bppRGB);
+	Gdiplus::Graphics* greenDrawingBuffer = Gdiplus::Graphics::FromImage(this->histogramCanvas[1]);
+
+	Gdiplus::Pen bluePen(Gdiplus::Color::Blue, 1.0F);
+	this->histogramCanvas[2] = new Gdiplus::Bitmap(256, 256, PixelFormat24bppRGB);
+	Gdiplus::Graphics* blueDrawingBuffer = Gdiplus::Graphics::FromImage(this->histogramCanvas[2]);
+
+	Gdiplus::Pen luminancePen(Gdiplus::Color::White, 1.0F);
+	this->histogramCanvas[3] = new Gdiplus::Bitmap(256, 256, PixelFormat24bppRGB);
+	Gdiplus::Graphics* luminanceDrawingBuffer = Gdiplus::Graphics::FromImage(this->histogramCanvas[3]);
+
+	int h = 0;
+	double division = 0.0;
+	double f = 0.0, m = 0.0;
+
+	//Obtener el tope de la gráfica
+	int height = 0;
+	for (int i = 0; i < 4; i++)
+	{
+		if (this->max[i] > height)
+		{
+			height = this->max[i];
+		}
+	}
+
+	for (int i = 0; i < 256; i++)
+	{
+		f = this->redFrequency[i]; m = this->max[0];
+		division = f / m;
+		h = (256 - (division * 256));
+		redDrawingBuffer->DrawLine(&redPen, i, 256, i, h);
+
+		f = this->greenFrequency[i]; m = this->max[0];
+		division = f / m;
+		h = (256 - (division * 256));
+		greenDrawingBuffer->DrawLine(&greenPen, i, 256, i, h);
+		
+		f = this->blueFrequency[i]; m = this->max[0];
+		division = f / m;
+		h = (256 - (division * 256));
+		blueDrawingBuffer->DrawLine(&bluePen, i, 256, i, h);
+		
+		f = this->luminanceFrequency[i]; m = this->max[0];
+		division = f / m;
+		h = (256 - (division * 256));
+		luminanceDrawingBuffer->DrawLine(&luminancePen, i, 256, i, h);
+	}
 }
 
 void Cv::Histogram::Equalize(EqualizationType equalizationType, double alpha = 1.0) 
@@ -152,108 +204,92 @@ void Cv::Histogram::Equalize(EqualizationType equalizationType, double alpha = 1
 	}
 }
 
-void Cv::Histogram::Save(WCHAR* filename) 
+bool Cv::Histogram::Save(std::wstring filename) 
 {
+	std::wstring prepend = L"";
 
+	try
+	{
+		CLSID pngClsid;
+		GetEncoderClsid(L"image/png", &pngClsid);
+		//this->equalizedImage->Save((prepend + filename).c_str(), &pngClsid, NULL);
+		prepend = L"RedHistogram";
+		this->GetRedHistogram()->Save((prepend + filename).c_str(), &pngClsid, NULL);
+		prepend = L"GreenHistogram";
+		this->GetGreenHistogram()->Save((prepend + filename).c_str(), &pngClsid, NULL);
+		prepend = L"BlueHistogram";
+		this->GetBlueHistogram()->Save((prepend + filename).c_str(), &pngClsid, NULL);
+		prepend = L"LuminanceHistogram";
+		this->GetLuminanceHistogram()->Save((prepend + filename).c_str(), &pngClsid, NULL);
+	}
+	catch (...)
+	{
+		return false;
+	}
+	return true;
 }
 
-Gdiplus::Bitmap* Cv::Histogram::GetRedHistogram() 
+Gdiplus::Bitmap * Cv::Histogram::GetRedHistogram()
 {
-	Gdiplus::Pen pen(Gdiplus::Color::Red, 1.0F);
-	Gdiplus::Bitmap* canvas = new Gdiplus::Bitmap(256, 256, PixelFormat24bppRGB);
-	Gdiplus::Graphics* drawingBuffer = Gdiplus::Graphics::FromImage(canvas);
-
-	//Obtener el tope de la gráfica
-	//TODO: Agregar el max de luminence
-	int height = 0;
-	for (int i = 0; i < 3; i++) 
-	{
-		if (this->max[i] > height) 
-		{
-			height = this->max[i];
-		}
-	}
-
-	for (int i = 0; i < 256; i++)
-	{
-		drawingBuffer->DrawLine(&pen, i, 0, i, this->redFrequency[i]);
-	}
-
-	return canvas;
+	return this->histogramCanvas[0];
 }
 
-Gdiplus::Bitmap* Cv::Histogram::GetGreenHistogram() 
+Gdiplus::Bitmap * Cv::Histogram::GetGreenHistogram()
 {
-	Gdiplus::Pen pen(Gdiplus::Color::Green, 1.0F);
-	Gdiplus::Bitmap* canvas = new Gdiplus::Bitmap(256, 256, PixelFormat24bppRGB);
-	Gdiplus::Graphics* drawingBuffer = Gdiplus::Graphics::FromImage(canvas);
-
-	//Obtener el tope de la gráfica
-	//TODO: Agregar el max de luminence
-	int height = 0;
-	for (int i = 0; i < 3; i++)
-	{
-		if (this->max[i] > height)
-		{
-			height = this->max[i];
-		}
-	}
-
-	for (int i = 0; i < 256; i++)
-	{
-		drawingBuffer->DrawLine(&pen, i, 0, i, this->greenFrequency[i]);
-	}
-
-	return canvas;
+	return this->histogramCanvas[1];
 }
 
-Gdiplus::Bitmap* Cv::Histogram::GetBlueHistogram() 
+Gdiplus::Bitmap * Cv::Histogram::GetBlueHistogram()
 {
-	Gdiplus::Pen pen(Gdiplus::Color::Blue, 1.0F);
-	Gdiplus::Bitmap* canvas = new Gdiplus::Bitmap(256, 256, PixelFormat24bppRGB);
-	Gdiplus::Graphics* drawingBuffer = Gdiplus::Graphics::FromImage(canvas);
-
-	//Obtener el tope de la gráfica
-	//TODO: Agregar el max de luminence
-	int height = 0;
-	for (int i = 0; i < 3; i++)
-	{
-		if (this->max[i] > height)
-		{
-			height = this->max[i];
-		}
-	}
-
-	for (int i = 0; i < 256; i++)
-	{
-		drawingBuffer->DrawLine(&pen, i, 0, i, this->blueFrequency[i]);
-	}
-
-	return canvas;
+	return this->histogramCanvas[2];
 }
 
-//TODO: this
-Gdiplus::Bitmap* Cv::Histogram::GetLuminanceHistogram() 
+Gdiplus::Bitmap * Cv::Histogram::GetLuminanceHistogram()
 {
-	Gdiplus::Pen pen(Gdiplus::Color::White, 1.0F);
-	Gdiplus::Bitmap* canvas = new Gdiplus::Bitmap(256, 256, PixelFormat24bppRGB);
-	Gdiplus::Graphics* drawingBuffer = Gdiplus::Graphics::FromImage(canvas);
+	return this->histogramCanvas[3];
+}
 
-	//Obtener el tope de la gráfica
-	//TODO: Agregar el max de luminence
-	int height = 0;
-	for (int i = 0; i < 3; i++)
+Gdiplus::Bitmap * Cv::Histogram::GetEqualizedImage()
+{
+	return this->equalizedImage;
+}
+
+void Cv::Histogram::GetImageDimensions()
+{
+	this->imageHeight = this->originalImage->GetHeight();
+	this->imageWidth = this->originalImage->GetWidth();
+	this->totalPixels = this->imageHeight * this->imageWidth;
+	this->rect = new Gdiplus::Rect(0, 0, this->imageWidth, this->imageHeight);
+}
+
+int Cv::Histogram::GetEncoderClsid(const WCHAR* format, CLSID* pClsid) {
+	UINT num = 0; // number of image encoders
+	UINT size = 0; // size of the image encoder array in bytes 
+
+	Gdiplus::ImageCodecInfo* pImageCodecInfo = NULL;
+	Gdiplus::GetImageEncodersSize(&num, &size);
+
+	if (size == 0) {
+		return -1; // Failure
+	}
+
+	pImageCodecInfo = (Gdiplus::ImageCodecInfo*)(malloc(size));
+
+	if (pImageCodecInfo == NULL) {
+		return -1; // Failure 
+	}
+
+	Gdiplus::GetImageEncoders(num, size, pImageCodecInfo);
+
+	for (UINT j = 0; j < num; ++j)
 	{
-		if (this->max[i] > height)
+		if (wcscmp(pImageCodecInfo[j].MimeType, format) == 0)
 		{
-			height = this->max[i];
+			*pClsid = pImageCodecInfo[j].Clsid;
+			free(pImageCodecInfo);
+			return j; // Success 
 		}
 	}
-
-	for (int i = 0; i < 256; i++)
-	{
-		drawingBuffer->DrawLine(&pen, i, 0, i, this->blueFrequency[i]);
-	}
-
-	return canvas;
+	free(pImageCodecInfo);
+	return 0; // Failure 
 }
