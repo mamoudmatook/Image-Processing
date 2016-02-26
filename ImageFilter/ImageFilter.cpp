@@ -167,64 +167,40 @@
 
 	void Cv::ImageFilter::MedianFilter()
 	{
-		//void insertionSort(int window[])
-		//{
-		//	int temp, i, j;
-		//	for (i = 0; i < 9; i++) {
-		//		temp = window[i];
-		//		for (j = i - 1; j >= 0 && temp < window[j]; j--) {
-		//			window[j + 1] = window[j];
-		//		}
-		//		window[j + 1] = temp;
-		//	}
-		//}
-		//Mat src, dst;
+		Gdiplus::Color kernel[9];
+		Gdiplus::Color temp;
+		int i, j;
 
-		//// Load an image
-		//src = imread("book.png", CV_LOAD_IMAGE_GRAYSCALE);
+		for (int y = 1; y < this->imageHeight - 1; y++) 
+		{
+			for (int x = 1; x < this->imageWidth - 1; x++) 
+			{
+				this->originalImage->GetPixel(x - 1, y - 1, &kernel[0]);
+				this->originalImage->GetPixel(x - 1, y, &kernel[1]);
+				this->originalImage->GetPixel(x + 1, y - 1, &kernel[2]);
+				this->originalImage->GetPixel(x, y - 1, &kernel[3]);
+				this->originalImage->GetPixel(x, y, &kernel[4]);
+				this->originalImage->GetPixel(x, y + 1, &kernel[5]);
+				this->originalImage->GetPixel(x + 1, y - 1, &kernel[6]);
+				this->originalImage->GetPixel(x + 1, y, &kernel[7]);
+				this->originalImage->GetPixel(x + 1, y + 1, &kernel[8]);
 
-		//if (!src.data)
-		//{
-		//	return -1;
-		//}
+				//sacar media
+				for (i = 0; i < 9; i++) 
+				{
+					temp = kernel[i];
+					for (j = i - 1; j >= 0 && ((temp.GetRed() + temp.GetGreen() + temp.GetBlue()) / 3) < ((kernel[j].GetRed() + kernel[j].GetGreen() + kernel[j].GetBlue()) / 3); j--) 
+					{
+						kernel[j + 1] = kernel[j];
+					}
+					kernel[j + 1] = temp;
+				}
 
-		////create a sliding window of size 9
-		//int window[9];
-
-		//dst = src.clone();
-		//for (int y = 0; y < src.rows; y++)
-		//	for (int x = 0; x < src.cols; x++)
-		//		dst.at<uchar>(y, x) = 0.0;
-
-		//for (int y = 1; y < src.rows - 1; y++) {
-		//	for (int x = 1; x < src.cols - 1; x++) {
-
-		//		// Pick up window element
-
-		//		window[0] = src.at<uchar>(y - 1, x - 1);
-		//		window[1] = src.at<uchar>(y, x - 1);
-		//		window[2] = src.at<uchar>(y + 1, x - 1);
-		//		window[3] = src.at<uchar>(y - 1, x);
-		//		window[4] = src.at<uchar>(y, x);
-		//		window[5] = src.at<uchar>(y + 1, x);
-		//		window[6] = src.at<uchar>(y - 1, x + 1);
-		//		window[7] = src.at<uchar>(y, x + 1);
-		//		window[8] = src.at<uchar>(y + 1, x + 1);
-
-		//		// sort the window to find median
-		//		insertionSort(window);
-
-		//		// assign the median to centered element of the matrix
-		//		dst.at<uchar>(y, x) = window[4];
-		//	}
-		//}
-
-		//namedWindow("final");
-		//imshow("final", dst);
-
-		//namedWindow("initial");
-		//imshow("initial", src);
-	}
+				//centro es el nuevo pixel
+				this->filteredImage->SetPixel(x, y, kernel[4]);
+			}
+		}
+	};
 
 	bool Cv::ImageFilter::Save(WCHAR *filename)
 	{
