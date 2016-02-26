@@ -1,19 +1,16 @@
 // ImageFilter.cpp : Defines the exported functions for the DLL application.
-#include "FilterTypes.h"
 #include "ImageFilter.h"
 
 	Cv::ImageFilter::ImageFilter()
 	{
 		Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
-		ZeroMemory(this->originalImage, sizeof(Gdiplus::Bitmap));
-		ZeroMemory(this->filteredImage, sizeof(Gdiplus::Bitmap));
 	}
 
 	Cv::ImageFilter::~ImageFilter()
 	{
 		Gdiplus::GdiplusShutdown(this->gdiplusToken);
-		ZeroMemory(this->originalImage, sizeof(Gdiplus::Bitmap));
-		ZeroMemory(this->filteredImage, sizeof(Gdiplus::Bitmap));
+		delete this->originalImage;
+		delete this->filteredImage;
 	}
 
 	bool Cv::ImageFilter::SetImage(WCHAR *fileUri)
@@ -26,6 +23,8 @@
 
 		this->GetImageDimensions();
 
+		this->filteredImage = new Gdiplus::Bitmap(this->imageWidth, this->imageHeight, PixelFormat24bppRGB);
+
 		return true;
 	}
 
@@ -33,6 +32,7 @@
 	{
 		//std::fill(std::begin(kernel), std::end(kernel), 0);
 		kernel[KERNEL_HEIGHT][KERNEL_WIDTH] = {};
+		Kernel::bias = 0.0;
 
 		switch (filterType)
 		{
@@ -103,14 +103,13 @@
 
 		double factor = 1 / this->kernelDivisor;
 
-		this->originalImage->LockBits(this->rect, Gdiplus::ImageLockMode::ImageLockModeRead, PixelFormat24bppRGB, this->OriginalImageBuffer);
-		this->filteredImage = new Gdiplus::Bitmap(this->imageWidth, this->imageHeight, PixelFormat24bppRGB);
-		this->filteredImage->LockBits(this->rect, Gdiplus::ImageLockMode::ImageLockModeWrite, PixelFormat24bppRGB, this->filteredImageBuffer);
+		/*this->originalImage->LockBits(this->rect, Gdiplus::ImageLockMode::ImageLockModeRead, PixelFormat24bppRGB, this->OriginalImageBuffer);
+		this->filteredImage->LockBits(this->rect, Gdiplus::ImageLockMode::ImageLockModeWrite, PixelFormat24bppRGB, this->filteredImageBuffer);*/
 
 		double red = 0.0, green = 0.0, blue = 0.0;
 		Gdiplus::Color color;
 		Gdiplus::Color *newColor;
-		Gdiplus::Color *colorHolder;
+		/*Gdiplus::Color *colorHolder;*/
 
 		//algoritmo
 		for (int x = 0; x < this->imageWidth; x++)
@@ -147,29 +146,73 @@
 				}
 
 				this->filteredImage->SetPixel(x, y, *newColor);
+
+				delete newColor;
 			}
 		}
 
-		this->originalImage->UnlockBits(this->OriginalImageBuffer);
-		this->filteredImage->UnlockBits(this->filteredImageBuffer);
+		/*this->originalImage->UnlockBits(this->OriginalImageBuffer);
+		this->filteredImage->UnlockBits(this->filteredImageBuffer);*/
 
 		return true;
 	}
 
 	bool Cv::ImageFilter::Save(WCHAR *filename)
 	{
-		
+		try 
+		{
+			CLSID pngClsid;
+			GetEncoderClsid(L"image/png", &pngClsid);
+			this->filteredImage->Save(filename, &pngClsid, NULL);
+		}
+		catch (...)
+		{
+			return false;
+		}
 		return true;
 	}
 
-	/*Gdiplus::Bitmap ImageFilter::GetFilteredImage()
+	Gdiplus::Bitmap* Cv::ImageFilter::GetFilteredImage()
 	{
-		return new Gdiplus::Bitmap();
-	}*/
+		return this->filteredImage;
+	}
 
 	void Cv::ImageFilter::GetImageDimensions()
 	{
 		this->imageWidth = this->originalImage->GetWidth();
 		this->imageHeight = this->originalImage->GetHeight();
+		this->totalPixels = this->imageWidth * this->imageHeight;
 		this->rect = new Gdiplus::Rect(0, 0, this->imageWidth, this->imageHeight);
+	}
+
+	int Cv::ImageFilter::GetEncoderClsid(const WCHAR* format, CLSID* pClsid) {
+		UINT num = 0; // number of image encoders
+		UINT size = 0; // size of the image encoder array in bytes 
+
+		Gdiplus::ImageCodecInfo* pImageCodecInfo = NULL;
+		Gdiplus::GetImageEncodersSize(&num, &size);
+
+		if (size == 0) {
+			return -1; // Failure
+		}
+
+		pImageCodecInfo = (Gdiplus::ImageCodecInfo*)(malloc(size));
+
+		if (pImageCodecInfo == NULL) {
+			return -1; // Failure 
+		}
+
+		Gdiplus::GetImageEncoders(num, size, pImageCodecInfo);
+
+		for (UINT j = 0; j < num; ++j)
+		{
+			if (wcscmp(pImageCodecInfo[j].MimeType, format) == 0)
+			{
+				*pClsid = pImageCodecInfo[j].Clsid;
+				free(pImageCodecInfo);
+				return j; // Success 
+			}
+		}
+		free(pImageCodecInfo);
+		return 0; // Failure 
 	}

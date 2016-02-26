@@ -1,5 +1,6 @@
 #pragma once
 #include "stdafx.h"
+#include "FilterTypes.h"
 
 namespace Cv {
 
@@ -17,7 +18,7 @@ namespace Cv {
 		bool SetImage(WCHAR *fileUri);
 		bool Filter(FilterType filterType, CorrectionMode correctionMode);
 		bool Save(WCHAR *filename);
-		Gdiplus::Bitmap GetFilteredImage();
+		Gdiplus::Bitmap* GetFilteredImage();
 
 	private:
 		Gdiplus::GdiplusStartupInput gdiplusStartupInput;
@@ -25,17 +26,19 @@ namespace Cv {
 
 		Gdiplus::Bitmap* originalImage;
 		Gdiplus::Bitmap* filteredImage;
-		Gdiplus::BitmapData* filteredImageBuffer;
-		Gdiplus::BitmapData* OriginalImageBuffer;
-		Gdiplus::Rect* rect;
+		Gdiplus::BitmapData filteredImageBuffer;
+		Gdiplus::BitmapData OriginalImageBuffer;
 
 		double kernel[KERNEL_HEIGHT][KERNEL_WIDTH];
 		int kernelDivisor;
 
 		int imageWidth;
 		int imageHeight;
+		long totalPixels;
+		Gdiplus::Rect* rect;
 
 		void SetKernel(FilterType filterType);
 		void GetImageDimensions();
+		int GetEncoderClsid(const WCHAR* format, CLSID* pClsid);
 	};
 }
