@@ -55,6 +55,7 @@
 			std::copy(&Kernel::Laplacian[0][0], &Kernel::Laplacian[0][0] + KERNEL_HEIGHT*KERNEL_WIDTH, &kernel[0][0]);
 			break;
 		case Cv::MinusLaplacian:
+			Kernel::GenerateMinusLaplacianKernel();
 			std::copy(&Kernel::MinusLaplacian[0][0], &Kernel::MinusLaplacian[0][0] + KERNEL_HEIGHT*KERNEL_WIDTH, &kernel[0][0]);
 			break;
 		case Cv::DirectionalH:

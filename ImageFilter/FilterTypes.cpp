@@ -126,6 +126,12 @@ namespace Cv {
 
 	void Kernel::GenerateMinusLaplacianKernel()
 	{
+		for (int y = 0; y < KERNEL_HEIGHT; y++) {
+			for (int x = 0; x < KERNEL_WIDTH; x++)
+			{
+				Kernel::MinusLaplacian[x][y] = Kernel::Identity[x][y] - Kernel::Laplacian[x][y];
+			}
+		}
 	}
 
 	double Kernel::factor = 0.0;
