@@ -15,9 +15,9 @@ namespace Cv {
 		ImageFilter();
 		~ImageFilter();
 
-		bool SetImage(WCHAR *fileUri);
+		bool SetImage(std::wstring fileUri);
 		bool Filter(FilterType filterType, CorrectionMode correctionMode, double sigma = 0.0, double bias = 0.0);
-		bool Save(WCHAR *filename);
+		bool Save(std::wstring filename);
 		Gdiplus::Bitmap* GetFilteredImage();
 
 	private:

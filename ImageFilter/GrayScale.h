@@ -8,8 +8,8 @@ namespace Cv {
 		GrayScale();
 		~GrayScale();
 		
-		bool SetImage(WCHAR *fileUri);
-		bool Save(WCHAR *filename);
+		bool SetImage(std::wstring fileUri);
+		bool Save(std::wstring filename);
 		Gdiplus::Bitmap* GetFilteredImage();
 
 		void Luminosity();

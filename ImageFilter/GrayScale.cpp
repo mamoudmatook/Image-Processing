@@ -21,9 +21,9 @@ Cv::GrayScale::~GrayScale()
 /// </summary>
 /// <param name="fileUri"></param>
 /// <returns></returns>
-bool Cv::GrayScale::SetImage(WCHAR * fileUri)
+bool Cv::GrayScale::SetImage(std::wstring fileUri)
 {
-	this->originalImage = Gdiplus::Bitmap::FromFile(fileUri);
+	this->originalImage = Gdiplus::Bitmap::FromFile(fileUri.c_str());
 
 	Gdiplus::PixelFormat pixelFormat = this->originalImage->GetPixelFormat();
 	if (pixelFormat != PixelFormat24bppRGB) 
@@ -38,13 +38,13 @@ bool Cv::GrayScale::SetImage(WCHAR * fileUri)
 	return true;
 }
 
-bool Cv::GrayScale::Save(WCHAR * filename)
+bool Cv::GrayScale::Save(std::wstring filename)
 {
 	try
 	{
 		CLSID jpgClsid;
 		GetEncoderClsid(L"image/png", &jpgClsid);
-		this->grayImage->Save(filename, &jpgClsid, NULL);
+		this->grayImage->Save(filename.c_str(), &jpgClsid, NULL);
 	}
 	catch (...)
 	{

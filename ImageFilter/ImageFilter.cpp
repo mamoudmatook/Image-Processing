@@ -13,9 +13,9 @@
 		delete this->filteredImage;
 	}
 
-	bool Cv::ImageFilter::SetImage(WCHAR *fileUri)
+	bool Cv::ImageFilter::SetImage(std::wstring fileUri)
 	{
-		this->originalImage = new Gdiplus::Bitmap(fileUri);
+		this->originalImage = new Gdiplus::Bitmap(fileUri.c_str());
 
 		if (this->originalImage->GetPixelFormat() != PixelFormat24bppRGB) {
 			return false;
@@ -202,13 +202,13 @@
 		}
 	};
 
-	bool Cv::ImageFilter::Save(WCHAR *filename)
+	bool Cv::ImageFilter::Save(std::wstring filename)
 	{
 		try 
 		{
 			CLSID pngClsid;
 			GetEncoderClsid(L"image/png", &pngClsid);
-			this->filteredImage->Save(filename, &pngClsid, NULL);
+			this->filteredImage->Save(filename.c_str(), &pngClsid, NULL);
 		}
 		catch (...)
 		{

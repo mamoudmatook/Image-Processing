@@ -184,6 +184,7 @@ void Cv::Histogram::Equalize(EqualizationType equalizationType, double alpha = 1
 	{
 	case Cv::Simple:
 		//255*CDF/CDFmax
+		
 		break;
 	case Cv::Uniform:
 		//(pixelMayor - pixelMenor) * CDF/CDFmax + pixelMin

@@ -39,7 +39,7 @@ namespace Cv {
 		Mean, WeightedMean, Median, Gaussian, Laplacian, MinusLaplacian, DirectionalH, DirectionalV, SobelCols, SobelRows, MotionBlur, Emboss, Outline
 	};
 
-	static WCHAR* FilterNames[13] = {
+	static std::wstring FilterNames[13] = {
 		L"Mean", L"WeightedMean", L"Median", L"Gaussian", L"Laplacian", L"MinusLaplacian", L"DirectionalH", L"DirectionalV", L"SobelCols", L"SobelRows", L"MotionBlur", L"Emboss", L"Outline"
 	};
 }
