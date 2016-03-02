@@ -3,8 +3,6 @@
 Cv::GrayScale::GrayScale()
 {
 	Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
-	//ZeroMemory(this->originalImage, sizeof(Gdiplus::Bitmap));
-	//ZeroMemory(this->grayImage, sizeof(Gdiplus::Bitmap));
 }
 
 Cv::GrayScale::~GrayScale()
@@ -122,11 +120,6 @@ void Cv::GrayScale::Luminance()
 {
 	Gdiplus::Color color;
 	BYTE luminanceHolder = 0;
-	//UINT* pixels;
-	
-	//this->originalImage->LockBits(this->rect, Gdiplus::ImageLockMode::ImageLockModeRead, PixelFormat24bppRGB, this->originalImageBuffer);
-	//this->grayImage->LockBits(this->rect, Gdiplus::ImageLockMode::ImageLockModeWrite, PixelFormat24bppRGB, &this->grayImageBuffer);
-	//pixels = (UINT*)this->grayImageBuffer.Scan0;
 
 	for (int y = 0; y < this->imageHeight; y++) 
 	{
@@ -138,12 +131,8 @@ void Cv::GrayScale::Luminance()
 			if (luminanceHolder > 255) luminanceHolder = 255;
 
 			this->grayImage->SetPixel(x, y, Gdiplus::Color(luminanceHolder, luminanceHolder, luminanceHolder));
-			//pixels[this->imageHeight * this->grayImageBuffer.Stride / 3 + this->imageWidth] = 0xff00ff00;//((luminanceHolder & 0xff) << 16) + ((luminanceHolder & 0xff) << 8) + (luminanceHolder & 0xff);
 		}
 	}
-
-	//this->originalImage->UnlockBits(this->originalImageBuffer);
-	//this->grayImage->UnlockBits(&this->grayImageBuffer);
 }
 
 int Cv::GrayScale::GetEncoderClsid(const WCHAR* format, CLSID* pClsid) {
