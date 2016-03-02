@@ -72,7 +72,7 @@ namespace Cv {
 
 		void SimpleEqualization();
 		void UniformEqualization();
-		void ExponentialEqualization();
+		void ExponentialEqualization(double alpha);
 		void GeneralEqualization();
 		void DynamicRangeEqualization();
 		void StretchingEqualization();
