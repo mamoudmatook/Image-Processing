@@ -59,8 +59,9 @@ namespace Cv {
 		double minLuminance;
 
 		int roundCdf[4][BINS];
-		int cdfValues[4][BINS];
+		int cdf[4][BINS];
 		int minCdf[4];
+		int maxCdf[4];
 
 		Gdiplus::Bitmap* originalImage;
 		Gdiplus::Bitmap* equalizedImage;
@@ -68,6 +69,13 @@ namespace Cv {
 		Gdiplus::BitmapData histogramCanvasBuffer[4];
 		Gdiplus::BitmapData equalizedImageBuffer;
 		Gdiplus::BitmapData originalImageBuffer;
+
+		void SimpleEqualization();
+		void UniformEqualization();
+		void ExponentialEqualization();
+		void GeneralEqualization();
+		void DynamicRangeEqualization();
+		void StretchingEqualization();
 
 		void GetImageDimensions();
 		int GetEncoderClsid(const WCHAR* format, CLSID* pClsid);
