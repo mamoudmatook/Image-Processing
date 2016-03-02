@@ -4,7 +4,7 @@
 Cv::Histogram::Histogram() 
 {
 	Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
-	//La inicialización provoca un error en el heap al cargar la image...
+	//La inicialización provoca un error en el heap al cargar la image... :angry:
 	/*std::fill(this->redFrequency, this->redFrequency + BINS, 0);
 	std::fill(this->greenFrequency, this->greenFrequency + BINS, 0);
 	std::fill(this->blueFrequency, this->blueFrequency + BINS, 0);
@@ -27,9 +27,9 @@ Cv::Histogram::~Histogram()
 	delete this->histogramCanvas;
 }
 
-bool Cv::Histogram::SetImage(WCHAR * fileUri) 
+bool Cv::Histogram::SetImage(std::wstring fileUri) 
 {
-	this->originalImage = Gdiplus::Bitmap::FromFile(fileUri);
+	this->originalImage = Gdiplus::Bitmap::FromFile(fileUri.c_str());
 
 	if (this->originalImage->GetPixelFormat() != PixelFormat24bppRGB) 
 	{

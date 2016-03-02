@@ -16,7 +16,7 @@ namespace Cv {
 		Histogram();
 		~Histogram();
 
-		bool SetImage(WCHAR* fileUri);
+		bool SetImage(std::wstring fileUri);
 		void FillBins();
 		void CDF();
 		void DrawHistogram();
