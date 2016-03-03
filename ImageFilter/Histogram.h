@@ -5,8 +5,13 @@
 
 namespace Cv {
 
-	enum EqualizationType {
+	enum EqualizationType 
+	{
 		Simple, Uniform, Exponential, General, DynamicRange, Stretching
+	};
+
+	static std::wstring EqualizationNames[6] = {
+		L"Simple", L"Uniform", L"Exponential", L"General", L"DynamicRange", L"Stretching"
 	};
 
 	class Histogram
@@ -56,8 +61,6 @@ namespace Cv {
 		//Una posición por cada color
 		BYTE max[4];
 		BYTE min[4];
-		double maxLuminance;
-		double minLuminance;
 
 		int roundCdf[4][BINS];
 		int cdf[4][BINS];
