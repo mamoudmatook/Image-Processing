@@ -22,6 +22,7 @@ Cv::Histogram::~Histogram()
 	Gdiplus::GdiplusShutdown(this->gdiplusToken);
 	delete this->originalImage;
 	delete this->equalizedImage;
+	delete this->grayScaleEqualizedImage;
 	delete this->rect;
 	delete this->histogramCanvas;
 }
@@ -217,6 +218,8 @@ bool Cv::Histogram::Save(std::wstring filename)
 		CLSID pngClsid;
 		GetEncoderClsid(L"image/png", &pngClsid);
 		this->equalizedImage->Save((prepend + filename).c_str(), &pngClsid, NULL);
+		prepend = L"GrayScale";
+		this->grayScaleEqualizedImage->Save((prepend + filename).c_str(), &pngClsid, NULL);
 		prepend = L"RedHistogram";
 		this->GetRedHistogram()->Save((prepend + filename).c_str(), &pngClsid, NULL);
 		prepend = L"GreenHistogram";
@@ -258,9 +261,15 @@ Gdiplus::Bitmap * Cv::Histogram::GetEqualizedImage()
 	return this->equalizedImage;
 }
 
+Gdiplus::Bitmap * Cv::Histogram::GetGrayScaleEqualizedImage()
+{
+	return this->grayScaleEqualizedImage;
+}
+
 //255*CDF/CDFmax
 void Cv::Histogram::SimpleEqualization()
 {
+	this->grayScaleEqualizedImage = new Gdiplus::Bitmap(this->imageWidth, this->imageHeight, PixelFormat24bppRGB);
 	this->equalizedImage = new Gdiplus::Bitmap(this->imageWidth, this->imageHeight, PixelFormat24bppRGB);
 	int newColor = 0;
 
@@ -269,7 +278,12 @@ void Cv::Histogram::SimpleEqualization()
 		for (int y = 0; y < this->imageHeight; y++)
 		{
 			newColor = (double)(255 * cdf[3][this->luminance[this->imageWidth * y + x]]) / maxCdf[3];
-			this->equalizedImage->SetPixel(x, y, Gdiplus::Color(newColor, newColor, newColor));
+			this->grayScaleEqualizedImage->SetPixel(x, y, Gdiplus::Color(newColor, newColor, newColor));
+
+			this->equalizedImage->SetPixel(x, y, Gdiplus::Color(
+				(double)(255 * cdf[0][this->red[this->imageWidth * y + x]]) / maxCdf[0],
+				(double)(255 * cdf[1][this->green[this->imageWidth * y + x]]) / maxCdf[1],
+				(double)(255 * cdf[2][this->blue[this->imageWidth * y + x]]) / maxCdf[2]));
 		}
 	}
 }
@@ -277,6 +291,7 @@ void Cv::Histogram::SimpleEqualization()
 //(pixelMayor - pixelMenor) * CDF/CDFmax + pixelMin
 void Cv::Histogram::UniformEqualization()
 {
+	this->grayScaleEqualizedImage = new Gdiplus::Bitmap(this->imageWidth, this->imageHeight, PixelFormat24bppRGB);
 	this->equalizedImage = new Gdiplus::Bitmap(this->imageWidth, this->imageHeight, PixelFormat24bppRGB);
 	int newColor = 0;
 
@@ -285,7 +300,12 @@ void Cv::Histogram::UniformEqualization()
 		for (int y = 0; y < this->imageHeight; y++)
 		{
 			newColor = (max[3] - min[3]) * ((double)(cdf[3][this->luminance[this->imageWidth * y + x]]) / maxCdf[3]) + min[3];
-			this->equalizedImage->SetPixel(x, y, Gdiplus::Color(newColor, newColor, newColor));
+			this->grayScaleEqualizedImage->SetPixel(x, y, Gdiplus::Color(newColor, newColor, newColor));
+
+			this->equalizedImage->SetPixel(x, y, Gdiplus::Color(
+				(max[0] - min[0]) * ((double)(cdf[0][this->red[this->imageWidth * y + x]]) / maxCdf[0]) + min[0],
+				(max[1] - min[1]) * ((double)(cdf[1][this->green[this->imageWidth * y + x]]) / maxCdf[1]) + min[1],
+				(max[2] - min[2]) * ((double)(cdf[2][this->blue[this->imageWidth * y + x]]) / maxCdf[2]) + min[2]));
 		}
 	}
 }
@@ -293,23 +313,33 @@ void Cv::Histogram::UniformEqualization()
 //(pixelMin) - (1/alpha) * ln(1 - (CDF / maxCDF))
 void Cv::Histogram::ExponentialEqualization(double alpha)
 {
+	this->grayScaleEqualizedImage = new Gdiplus::Bitmap(this->imageWidth, this->imageHeight, PixelFormat24bppRGB);
 	this->equalizedImage = new Gdiplus::Bitmap(this->imageWidth, this->imageHeight, PixelFormat24bppRGB);
+
 	int newColor = 0;
-	double p1 = 0.0;
-	double p2 = 0.0;
-	double p3 = 0.0;
-	double p4 = 0.0;
+	double r, g, b, l;
+	r = g = b = l = 0.0;
 
 	for (int x = 0; x < this->imageWidth; x++)
 	{
 		for (int y = 0; y < this->imageHeight; y++)
 		{
-			p1 = (double)min[3];
-			p2 = (1.0 / alpha);
-			p3 = (double)cdf[3][this->luminance[this->imageWidth * y + x]] / (double)maxCdf[3];
+			l = (double)cdf[3][this->luminance[this->imageWidth * y + x]] / (double)maxCdf[3];
+			r = (double)cdf[0][this->red[this->imageWidth * y + x]] / (double)maxCdf[0];
+			g = (double)cdf[1][this->green[this->imageWidth * y + x]] / (double)maxCdf[1];
+			b = (double)cdf[2][this->blue[this->imageWidth * y + x]] / (double)maxCdf[2];
+			if (l == 1.0) {l = 0.9;}
+			if (r == 1.0) {r = 0.9;}
+			if (g == 1.0) {g = 0.9;}
+			if (b == 1.0) {b = 0.9;}
 
-			newColor = p1 - (p2 * log(1.0 - p3));
-			this->equalizedImage->SetPixel(x, y, Gdiplus::Color(newColor, newColor, newColor));
+			newColor = (double)min[3] - ((1.0 / alpha) * log(1.0 - l));
+			this->grayScaleEqualizedImage->SetPixel(x, y, Gdiplus::Color(newColor, newColor, newColor));
+
+			this->equalizedImage->SetPixel(x, y, Gdiplus::Color(
+				(double)min[0] - ((1.0 / alpha) * log(1.0 - r)),
+				(double)min[1] - ((1.0 / alpha) * log(1.0 - g)),
+				(double)min[2] - ((1.0 / alpha) * log(1.0 - b))));
 		}
 	}
 }
@@ -317,6 +347,7 @@ void Cv::Histogram::ExponentialEqualization(double alpha)
 //round( ((CDF-CDFmin)/(totalPixels - CDFmin)) * 255 )
 void Cv::Histogram::GeneralEqualization()
 {
+	this->grayScaleEqualizedImage = new Gdiplus::Bitmap(this->imageWidth, this->imageHeight, PixelFormat24bppRGB);
 	this->equalizedImage = new Gdiplus::Bitmap(this->imageWidth, this->imageHeight, PixelFormat24bppRGB);
 	int newColor = 0;
 
@@ -326,7 +357,12 @@ void Cv::Histogram::GeneralEqualization()
 		{
 			newColor = round((((double)(cdf[3][this->luminance[this->imageWidth * y + x]] - minCdf[3])) / ((double)(this->totalPixels - minCdf[3]))) * 255);
 
-			this->equalizedImage->SetPixel(x, y, Gdiplus::Color(newColor, newColor, newColor));
+			this->grayScaleEqualizedImage->SetPixel(x, y, Gdiplus::Color(newColor, newColor, newColor));
+
+			this->equalizedImage->SetPixel(x, y, Gdiplus::Color(
+				round((((double)(cdf[0][this->red[this->imageWidth * y + x]] - minCdf[0])) / ((double)(this->totalPixels - minCdf[0]))) * 255),
+				round((((double)(cdf[1][this->green[this->imageWidth * y + x]] - minCdf[1])) / ((double)(this->totalPixels - minCdf[1]))) * 255),
+				round((((double)(cdf[2][this->blue[this->imageWidth * y + x]] - minCdf[2])) / ((double)(this->totalPixels - minCdf[2]))) * 255)));
 		}
 	}
 }
@@ -334,6 +370,7 @@ void Cv::Histogram::GeneralEqualization()
 // (pixel - PixelMenor) * ((CDFmax - CDFMin) / (pixelMayor - pixelMenor)) + CDFMin
 void Cv::Histogram::DynamicRangeEqualization()
 {
+	this->grayScaleEqualizedImage = new Gdiplus::Bitmap(this->imageWidth, this->imageHeight, PixelFormat24bppRGB);
 	this->equalizedImage = new Gdiplus::Bitmap(this->imageWidth, this->imageHeight, PixelFormat24bppRGB);
 	int newColor = 0;
 
@@ -344,6 +381,9 @@ void Cv::Histogram::DynamicRangeEqualization()
 			this->equalizedImage->SetPixel(x, y, Gdiplus::Color( (this->red[this->imageWidth * y + x] - this->min[0]) * ((double)(((double)(this->maxCdf[0] - this->minCdf[0])) / ((double)(this->max[0] - this->min[0])))) + this->minCdf[0],
 				(this->green[this->imageWidth * y + x] - this->min[1]) * ((double)(((double)(this->maxCdf[1] - this->minCdf[1])) / ((double)(this->max[1] - this->min[1])))) + this->minCdf[1],
 				(this->luminance[this->imageWidth * y + x] - this->min[2]) * ((double)(((double)(this->maxCdf[2] - this->minCdf[2])) / ((double)(this->max[2] - this->min[2])))) + this->minCdf[2]));
+
+			newColor = (this->luminance[this->imageWidth * y + x] - this->min[3]) * ((double)(((double)(this->maxCdf[3] - this->minCdf[3])) / ((double)(this->max[3] - this->min[3])))) + this->minCdf[3];
+			this->grayScaleEqualizedImage->SetPixel(x, y, Gdiplus::Color(newColor, newColor, newColor));
 		}
 	}
 }
@@ -352,6 +392,7 @@ void Cv::Histogram::DynamicRangeEqualization()
 void Cv::Histogram::StretchingEqualization()
 {
 	this->equalizedImage = new Gdiplus::Bitmap(this->imageWidth, this->imageHeight, PixelFormat24bppRGB);
+	this->grayScaleEqualizedImage = new Gdiplus::Bitmap(this->imageWidth, this->imageHeight, PixelFormat24bppRGB);
 	int newColor = 0;
 
 	for (int x = 0; x < this->imageWidth; x++)
@@ -362,6 +403,9 @@ void Cv::Histogram::StretchingEqualization()
 				((double) ( (double)(this->red[this->imageWidth * y + x] - this->min[0])) / ((double)(this->max[0] - this->min[0]))) * 255,
 				((double) ( (double)(this->green[this->imageWidth * y + x] - this->min[1])) / ((double)(this->max[1] - this->min[1]))) * 255,
 				((double) ( (double)(this->blue[this->imageWidth * y + x] - this->min[2])) / ((double)(this->max[2] - this->min[2]))) * 255));
+
+			newColor = ((double)((double)(this->luminance[this->imageWidth * y + x] - this->min[3])) / ((double)(this->max[3] - this->min[3]))) * 255;
+			this->grayScaleEqualizedImage->SetPixel(x, y, Gdiplus::Color(newColor, newColor, newColor));
 		}
 	}
 }

@@ -28,6 +28,7 @@ namespace Cv {
 		Gdiplus::Bitmap* GetBlueHistogram();
 		Gdiplus::Bitmap* GetLuminanceHistogram();
 		Gdiplus::Bitmap* GetEqualizedImage();
+		Gdiplus::Bitmap* GetGrayScaleEqualizedImage();
 
 	private:
 		Gdiplus::GdiplusStartupInput gdiplusStartupInput;
@@ -65,6 +66,7 @@ namespace Cv {
 
 		Gdiplus::Bitmap* originalImage;
 		Gdiplus::Bitmap* equalizedImage;
+		Gdiplus::Bitmap* grayScaleEqualizedImage;
 		Gdiplus::Bitmap* histogramCanvas[4];
 		Gdiplus::BitmapData histogramCanvasBuffer[4];
 		Gdiplus::BitmapData equalizedImageBuffer;
