@@ -341,9 +341,9 @@ void Cv::Histogram::DynamicRangeEqualization()
 	{
 		for (int y = 0; y < this->imageHeight; y++)
 		{
-			newColor = (this->luminance[this->imageWidth * y + x] - this->min[3]) * ( ((double)(this->maxCdf[3] - this->minCdf[3])) / ((double)(this->max[3] - this->min[3])) ) + this->minCdf[3];
-
-			this->equalizedImage->SetPixel(x, y, Gdiplus::Color(newColor, newColor, newColor));
+			this->equalizedImage->SetPixel(x, y, Gdiplus::Color( (this->red[this->imageWidth * y + x] - this->min[0]) * ((double)(((double)(this->maxCdf[0] - this->minCdf[0])) / ((double)(this->max[0] - this->min[0])))) + this->minCdf[0],
+				(this->green[this->imageWidth * y + x] - this->min[1]) * ((double)(((double)(this->maxCdf[1] - this->minCdf[1])) / ((double)(this->max[1] - this->min[1])))) + this->minCdf[1],
+				(this->luminance[this->imageWidth * y + x] - this->min[2]) * ((double)(((double)(this->maxCdf[2] - this->minCdf[2])) / ((double)(this->max[2] - this->min[2])))) + this->minCdf[2]));
 		}
 	}
 }
