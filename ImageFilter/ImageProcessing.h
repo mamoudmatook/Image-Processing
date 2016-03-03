@@ -13,7 +13,7 @@ namespace Cv {
 		bool Save(std::wstring filename, std::wstring mimeType = L"image/png");
 		Gdiplus::Bitmap* GetProcessedImage();
 
-	private:
+	protected:
 		Gdiplus::GdiplusStartupInput gdiplusStartupInput;
 		ULONG_PTR gdiplusToken;
 
