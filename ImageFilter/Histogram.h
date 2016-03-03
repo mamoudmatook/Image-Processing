@@ -20,7 +20,7 @@ namespace Cv {
 		void FillBins();
 		void CDF();
 		void DrawHistogram();
-		void Equalize(EqualizationType equalizationType, double alpha);
+		void Equalize(EqualizationType equalizationType, double alpha = 1.0);
 		bool Save(std::wstring filename);
 
 		Gdiplus::Bitmap* GetRedHistogram();

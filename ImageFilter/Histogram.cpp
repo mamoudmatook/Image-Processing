@@ -182,7 +182,7 @@ void Cv::Histogram::DrawHistogram()
 	}
 }
 
-void Cv::Histogram::Equalize(EqualizationType equalizationType, double alpha = 1.0) 
+void Cv::Histogram::Equalize(EqualizationType equalizationType, double alpha) 
 {
 	switch (equalizationType)
 	{
@@ -196,7 +196,7 @@ void Cv::Histogram::Equalize(EqualizationType equalizationType, double alpha = 1
 		this->ExponentialEqualization(alpha);
 		break;
 	case Cv::General:
-		//round( ((CDF-CDFmin)/(totalPixels - CDFmin)) * 255 )
+		this->GeneralEqualization();
 		break;
 	case Cv::DynamicRange:
 		// (pixel - PixelMenor) * ((CDFmax - CDFMin) / (pixelMayor - pixelMenor)) + CDFMin
@@ -314,8 +314,21 @@ void Cv::Histogram::ExponentialEqualization(double alpha)
 	}
 }
 
+//round( ((CDF-CDFmin)/(totalPixels - CDFmin)) * 255 )
 void Cv::Histogram::GeneralEqualization()
 {
+	this->equalizedImage = new Gdiplus::Bitmap(this->imageWidth, this->imageHeight, PixelFormat24bppRGB);
+	int newColor = 0;
+
+	for (int x = 0; x < this->imageWidth; x++)
+	{
+		for (int y = 0; y < this->imageHeight; y++)
+		{
+			newColor = round((((double)(cdf[3][this->luminance[this->imageWidth * y + x]] - minCdf[3])) / ((double)(this->totalPixels - minCdf[3]))) * 255);
+
+			this->equalizedImage->SetPixel(x, y, Gdiplus::Color(newColor, newColor, newColor));
+		}
+	}
 }
 
 void Cv::Histogram::DynamicRangeEqualization()
