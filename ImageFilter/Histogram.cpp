@@ -202,7 +202,7 @@ void Cv::Histogram::Equalize(EqualizationType equalizationType, double alpha)
 		this->DynamicRangeEqualization();
 		break;
 	case Cv::Stretching:
-		// ( (pixel - pixelMin) / (pixelMax - pixelMin) ) * 255 
+		this->StretchingEqualization();
 	default:
 		break;
 	}
@@ -348,8 +348,22 @@ void Cv::Histogram::DynamicRangeEqualization()
 	}
 }
 
+// ( (pixel - pixelMin) / (pixelMax - pixelMin) ) * 255 
 void Cv::Histogram::StretchingEqualization()
 {
+	this->equalizedImage = new Gdiplus::Bitmap(this->imageWidth, this->imageHeight, PixelFormat24bppRGB);
+	int newColor = 0;
+
+	for (int x = 0; x < this->imageWidth; x++)
+	{
+		for (int y = 0; y < this->imageHeight; y++)
+		{
+			this->equalizedImage->SetPixel(x, y, Gdiplus::Color(
+				((double) ( (double)(this->red[this->imageWidth * y + x] - this->min[0])) / ((double)(this->max[0] - this->min[0]))) * 255,
+				((double) ( (double)(this->green[this->imageWidth * y + x] - this->min[1])) / ((double)(this->max[1] - this->min[1]))) * 255,
+				((double) ( (double)(this->blue[this->imageWidth * y + x] - this->min[2])) / ((double)(this->max[2] - this->min[2]))) * 255));
+		}
+	}
 }
 
 void Cv::Histogram::GetImageDimensions()
