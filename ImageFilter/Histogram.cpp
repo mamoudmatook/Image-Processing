@@ -295,12 +295,20 @@ void Cv::Histogram::ExponentialEqualization(double alpha)
 {
 	this->equalizedImage = new Gdiplus::Bitmap(this->imageWidth, this->imageHeight, PixelFormat24bppRGB);
 	int newColor = 0;
+	double p1 = 0.0;
+	double p2 = 0.0;
+	double p3 = 0.0;
+	double p4 = 0.0;
 
 	for (int x = 0; x < this->imageWidth; x++)
 	{
 		for (int y = 0; y < this->imageHeight; y++)
 		{
-			newColor = ((double)min[3]) - ((1.0 / alpha) * log(1.0 - ((double)(cdf[3][this->luminance[this->imageWidth * y + x]]) / maxCdf[3])) );
+			p1 = (double)min[3];
+			p2 = (1.0 / alpha);
+			p3 = (double)cdf[3][this->luminance[this->imageWidth * y + x]] / (double)maxCdf[3];
+
+			newColor = p1 - (p2 * log(1.0 - p3));
 			this->equalizedImage->SetPixel(x, y, Gdiplus::Color(newColor, newColor, newColor));
 		}
 	}
