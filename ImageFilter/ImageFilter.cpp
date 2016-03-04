@@ -1,7 +1,7 @@
 // ImageFilter.cpp : Defines the exported functions for the DLL application.
 #include "ImageFilter.h"
 
-	void Cv::ImageFilter::SetKernel(FilterType filterType)
+	void Cv::ImageFilter::SetKernel(FilterType::FilterType filterType)
 	{
 		//std::fill(std::begin(kernel), std::end(kernel), 0);
 		kernel[KERNEL_HEIGHT][KERNEL_WIDTH] = {};
@@ -9,47 +9,47 @@
 
 		switch (filterType)
 		{
-		case Cv::Mean:
+		case Cv::FilterType::FilterType::Mean:
 			std::copy(&Kernel::Mean[0][0], &Kernel::Mean[0][0] + KERNEL_HEIGHT*KERNEL_WIDTH, &kernel[0][0]);
 			break;
-		case Cv::WeightedMean:
+		case Cv::FilterType::FilterType::WeightedMean:
 			std::copy(&Kernel::WeightedMean[0][0], &Kernel::WeightedMean[0][0] + KERNEL_HEIGHT*KERNEL_WIDTH, &kernel[0][0]);
 			break;
-		case Cv::Median:
+		case Cv::FilterType::FilterType::Median:
 			std::copy(&Kernel::Median[0][0], &Kernel::Median[0][0] + KERNEL_HEIGHT*KERNEL_WIDTH, &kernel[0][0]);
 			break;
-		case Cv::Gaussian:
+		case Cv::FilterType::FilterType::Gaussian:
 			Kernel::GenerateGaussianKernel();
 			std::copy(&Kernel::Gaussian[0][0], &Kernel::Gaussian[0][0] + KERNEL_HEIGHT*KERNEL_WIDTH, &kernel[0][0]);
 			break;
-		case Cv::Laplacian:
+		case Cv::FilterType::FilterType::Laplacian:
 			Kernel::GenerateMinusLaplacianKernel();
 			std::copy(&Kernel::Laplacian[0][0], &Kernel::Laplacian[0][0] + KERNEL_HEIGHT*KERNEL_WIDTH, &kernel[0][0]);
 			break;
-		case Cv::MinusLaplacian:
+		case Cv::FilterType::FilterType::MinusLaplacian:
 			Kernel::GenerateMinusLaplacianKernel();
 			std::copy(&Kernel::MinusLaplacian[0][0], &Kernel::MinusLaplacian[0][0] + KERNEL_HEIGHT*KERNEL_WIDTH, &kernel[0][0]);
 			break;
-		case Cv::DirectionalH:
+		case Cv::FilterType::FilterType::DirectionalH:
 			std::copy(&Kernel::DirectionalH[0][0], &Kernel::DirectionalH[0][0] + KERNEL_HEIGHT*KERNEL_WIDTH, &kernel[0][0]);
 			break;
-		case Cv::DirectionalV:
+		case Cv::FilterType::FilterType::DirectionalV:
 			std::copy(&Kernel::DirectionalV[0][0], &Kernel::DirectionalV[0][0] + KERNEL_HEIGHT*KERNEL_WIDTH, &kernel[0][0]);
 			break;
-		case Cv::SobelCols:
+		case Cv::FilterType::FilterType::SobelCols:
 			std::copy(&Kernel::SobelCols[0][0], &Kernel::SobelCols[0][0] + KERNEL_HEIGHT*KERNEL_WIDTH, &kernel[0][0]);
 			break;
-		case Cv::SobelRows:
+		case Cv::FilterType::FilterType::SobelRows:
 			std::copy(&Kernel::SobelRows[0][0], &Kernel::SobelRows[0][0] + KERNEL_HEIGHT*KERNEL_WIDTH, &kernel[0][0]);
 			break;
-		case Cv::MotionBlur:
+		case Cv::FilterType::FilterType::MotionBlur:
 			std::copy(&Kernel::MotionBlur[0][0], &Kernel::MotionBlur[0][0] + KERNEL_HEIGHT*KERNEL_WIDTH, &kernel[0][0]);
 			break;
-		case Cv::Emboss:
+		case Cv::FilterType::FilterType::Emboss:
 			std::copy(&Kernel::Emboss[0][0], &Kernel::Emboss[0][0] + KERNEL_HEIGHT*KERNEL_WIDTH, &kernel[0][0]);
 			Kernel::bias = 128.0;
 			break;
-		case Cv::Outline:
+		case Cv::FilterType::FilterType::Outline:
 			std::copy(&Kernel::Outline[0][0], &Kernel::Outline[0][0] + KERNEL_HEIGHT*KERNEL_WIDTH, &kernel[0][0]);
 			break;
 		default:
@@ -70,9 +70,9 @@
 		}
 	}
 
-	bool Cv::ImageFilter::Filter(FilterType filterType, CorrectionMode correctionMode, double sigma, double bias)
+	bool Cv::ImageFilter::Filter(FilterType::FilterType filterType, CorrectionMode correctionMode, double sigma, double bias)
 	{
-		if (filterType == Cv::FilterType::Median) {
+		if (filterType == Cv::FilterType::FilterType::Median) {
 			this->MedianFilter();
 		}
 		else 

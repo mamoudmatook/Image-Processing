@@ -14,7 +14,7 @@ namespace Cv {
 	{
 
 	public:
-		bool Filter(FilterType filterType, CorrectionMode correctionMode, double sigma = 0.0, double bias = 0.0);
+		bool Filter(FilterType::FilterType filterType, CorrectionMode correctionMode, double sigma = 0.0, double bias = 0.0);
 
 	private:
 		Gdiplus::BitmapData filteredImageBuffer;
@@ -23,7 +23,7 @@ namespace Cv {
 		double kernel[KERNEL_HEIGHT][KERNEL_WIDTH];
 		int kernelDivisor;
 
-		void SetKernel(FilterType filterType);
+		void SetKernel(FilterType::FilterType filterType);
 		void MedianFilter();
 	};
 }
