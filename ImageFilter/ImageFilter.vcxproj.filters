@@ -39,6 +39,9 @@
     <ClInclude Include="GrayScale.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ImageProcessing.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -59,8 +62,8 @@
     <ClCompile Include="GrayScale.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GetEncoderClsid.h">
-      <Filter>Header Files</Filter>
+    <ClCompile Include="ImageProcessing.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
