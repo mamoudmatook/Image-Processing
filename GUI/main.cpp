@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <string>
 #include <sstream>
+#include <Commdlg.h>
 
 using namespace GUI;
 
@@ -18,7 +19,8 @@ enum ProcessType
 	FILTER,
 	EQUALIZATION
 } processType;
-std::wstring imageUrl = L"C:\\Users\\David\\Documents\\Visual Studio 2015\\Projects\\PIAD1\\lenna.jpg";
+//std::wstring imageUrl = L"C:\\Users\\David\\Documents\\Visual Studio 2015\\Projects\\PIAD1\\lenna.jpg";
+std::wstring imageUrl = L"";
 Cv::FilterType::FilterType filterType = Cv::FilterType::FilterType::Mean;
 Cv::CorrectionMode correctionMode = Cv::CorrectionMode::Cut;
 Cv::EqualizationType equalizationType = Cv::EqualizationType::Simple;
@@ -67,71 +69,109 @@ int main(int argc, char* argv[]) {
 	return mainWindow.Join(hAccelTable);
 }
 
-//VOID DrawImage(HDC hdc, std::wstring file, Cv::FilterType filterType, Cv::CorrectionMode correctionMode)
+std::wstring BasicFileOpen(HWND hwnd)
+{
+	OPENFILENAME ofn;       // common dialog box structure
+	wchar_t szFile[MAX_PATH+1] = { 0 };       // buffer for file name
+	HANDLE hf;              // file handle
+
+	// Initialize OPENFILENAME
+	ZeroMemory(&ofn, sizeof(ofn));
+	ofn.lStructSize = sizeof(ofn);
+	ofn.hwndOwner = hwnd;
+	ofn.lpstrFile = szFile;
+	// Set lpstrFile[0] to '\0' so that GetOpenFileName does not 
+	// use the contents of szFile to initialize itself.
+	ofn.lpstrFile[0] = '\0';
+	ofn.nMaxFile = sizeof(szFile);
+	ofn.lpstrFilter = L"All\0*.*\0";
+	ofn.nFilterIndex = 1;
+	ofn.lpstrFileTitle = NULL;
+	ofn.nMaxFileTitle = 0;
+	ofn.lpstrInitialDir = NULL;
+	ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+
+	// Display the Open dialog box. 
+
+	if (GetOpenFileName(&ofn) == TRUE)
+		hf = CreateFile(ofn.lpstrFile,
+			GENERIC_READ,
+			0,
+			(LPSECURITY_ATTRIBUTES)NULL,
+			OPEN_EXISTING,
+			FILE_ATTRIBUTE_NORMAL,
+			(HANDLE)NULL);
+
+	//std::wstring myFile(ofn.lpstrFile);
+	return szFile;
+}
+
 VOID DrawImage(HDC hdc, std::wstring file)
 {
-	Gdiplus::Graphics graphics(hdc);
-	Cv::GrayScale gimage = Cv::GrayScale();
-	Cv::ImageFilter fimage = Cv::ImageFilter();
-	Cv::Histogram *himage = new Cv::Histogram();
+	if (!file.empty()) {
+		Gdiplus::Graphics graphics(hdc);
+		Cv::GrayScale gimage = Cv::GrayScale();
+		Cv::ImageFilter fimage = Cv::ImageFilter();
+		Cv::Histogram *himage = new Cv::Histogram();
 
-	switch (processType)
-	{
-	case GRAYSCALE:
-		gimage.SetImage(file);
-
-		switch (grayScaleType)
+		switch (processType)
 		{
-		case Cv::GrayScaleType::Luminance:
-			gimage.Luminance();
-			graphics.DrawImage(gimage.GetProcessedImage(), 10, 10);
-			gimage.Save(L"luminance.png");
+		case GRAYSCALE:
+			gimage.SetImage(file);
+
+			switch (grayScaleType)
+			{
+			case Cv::GrayScaleType::Luminance:
+				gimage.Luminance();
+				graphics.DrawImage(gimage.GetProcessedImage(), 10, 10);
+				gimage.Save(L"luminance.png");
+				break;
+			case Cv::GrayScaleType::Luminosity:
+				gimage.Luminosity();
+				graphics.DrawImage(gimage.GetProcessedImage(), 10, 10);
+				gimage.Save(L"luminosity.png");
+				break;
+			case Cv::GrayScaleType::Mean:
+				gimage.Mean();
+				graphics.DrawImage(gimage.GetProcessedImage(), 10, 10);
+				gimage.Save(L"meangray.png");
+				break;
+			default:
+				break;
+			}
 			break;
-		case Cv::GrayScaleType::Luminosity:
-			gimage.Luminosity();
-			graphics.DrawImage(gimage.GetProcessedImage(), 10, 10);
-			gimage.Save(L"luminosity.png");
+		case FILTER:
+			fimage.SetImage(file);
+			if (filterType != Cv::FilterType::FilterType::Gaussian)
+			{
+				fimage.Filter(filterType, correctionMode);
+			}
+			else
+			{
+				fimage.Filter(filterType, correctionMode, 0.8);
+			}
+			graphics.DrawImage(fimage.GetProcessedImage(), 10, 10);
+			fimage.Save(Cv::FilterNames[filterType] + L".png");
 			break;
-		case Cv::GrayScaleType::Mean:
-			gimage.Mean();
-			graphics.DrawImage(gimage.GetProcessedImage(), 10, 10);
-			gimage.Save(L"meangray.png");
+		case EQUALIZATION:
+			himage->SetImage(file);
+			himage->FillBins();
+			himage->CDF();
+			himage->DrawHistogram();
+
+			if (equalizationType != Cv::EqualizationType::Exponential) {
+				himage->Equalize(equalizationType);
+			}
+			else {
+				himage->Equalize(Cv::EqualizationType::Exponential, 0.02);
+			}
+
+			graphics.DrawImage(himage->GetProcessedImage(), 10, 10);
+			himage->Save(Cv::EqualizationNames[equalizationType] + L".png");
 			break;
 		default:
 			break;
 		}
-		break;
-	case FILTER:
-		fimage.SetImage(file);
-		if (filterType != Cv::FilterType::FilterType::Gaussian)
-		{
-			fimage.Filter(filterType, correctionMode);
-		}
-		else 
-		{
-			fimage.Filter(filterType, correctionMode, 0.8);
-		}
-		graphics.DrawImage(fimage.GetProcessedImage(), 10, 10);
-		fimage.Save(Cv::FilterNames[filterType] + L".png");
-		break;
-	case EQUALIZATION:
-		himage->SetImage(file);
-		himage->FillBins();
-		himage->CDF();
-		himage->DrawHistogram();
-
-		if (equalizationType != Cv::EqualizationType::Exponential) {
-			himage->Equalize(equalizationType);
-			graphics.DrawImage(himage->GetProcessedImage(), 10, 10);
-			himage->Save(Cv::EqualizationNames[equalizationType] + L".png");
-		}else {	
-			himage->Equalize(Cv::EqualizationType::Exponential, 0.02);
-			graphics.DrawImage(himage->GetProcessedImage(), 10, 10);
-			himage->Save(L"Exponential.png");
-		}
-		break;
-	default:
-		break;
 	}
 }
 
@@ -270,7 +310,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 			RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_INTERNALPAINT | RDW_ERASE);
 			break;
 		case IDM_EXIT:
-			DestroyWindow(hWnd);
+			//DestroyWindow(hWnd);
+			imageUrl = BasicFileOpen(hWnd);
 			break;
 		default:
 			return DefWindowProc(hWnd, message, wParam, lParam);
