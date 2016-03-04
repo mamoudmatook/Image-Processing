@@ -1,5 +1,6 @@
 #pragma once
 #include "stdafx.h"
+#include "ImageProcessing.h"
 
 #define BINS 256
 
@@ -14,7 +15,7 @@ namespace Cv {
 		L"Simple", L"Uniform", L"Exponential", L"General", L"DynamicRange", L"Stretching"
 	};
 
-	class Histogram
+	class Histogram : public Cv::ImageProcessing
 	{
 	public:
 
@@ -26,7 +27,7 @@ namespace Cv {
 		void CDF();
 		void DrawHistogram();
 		void Equalize(EqualizationType equalizationType, double alpha = 1.0);
-		bool Save(std::wstring filename);
+		bool Save(std::wstring filename, std::wstring mimeType);
 
 		Gdiplus::Bitmap* GetRedHistogram();
 		Gdiplus::Bitmap* GetGreenHistogram();
@@ -36,13 +37,6 @@ namespace Cv {
 		Gdiplus::Bitmap* GetGrayScaleEqualizedImage();
 
 	private:
-		Gdiplus::GdiplusStartupInput gdiplusStartupInput;
-		ULONG_PTR gdiplusToken;
-
-		long totalPixels;
-		int imageWidth;
-		int imageHeight;
-		Gdiplus::Rect* rect;
 
 		Gdiplus::Color color;
 
@@ -67,9 +61,7 @@ namespace Cv {
 		int minCdf[4];
 		int maxCdf[4];
 
-		Gdiplus::Bitmap* originalImage;
-		Gdiplus::Bitmap* equalizedImage;
-		Gdiplus::Bitmap* grayScaleEqualizedImage;
+		Gdiplus::Bitmap* grayScaleProcessedImage;
 		Gdiplus::Bitmap* histogramCanvas[4];
 		Gdiplus::BitmapData histogramCanvasBuffer[4];
 		Gdiplus::BitmapData equalizedImageBuffer;
@@ -81,8 +73,5 @@ namespace Cv {
 		void GeneralEqualization();
 		void DynamicRangeEqualization();
 		void StretchingEqualization();
-
-		void GetImageDimensions();
-		int GetEncoderClsid(const WCHAR* format, CLSID* pClsid);
 	};
 }
