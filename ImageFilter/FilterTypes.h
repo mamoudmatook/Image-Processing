@@ -34,9 +34,11 @@ namespace Cv {
 		double static factor;
 	};
 
-	enum FilterType
-	{
-		Mean, WeightedMean, Median, Gaussian, Laplacian, MinusLaplacian, DirectionalH, DirectionalV, SobelCols, SobelRows, MotionBlur, Emboss, Outline
+	namespace FilterType {
+		enum FilterType
+		{
+			Mean, WeightedMean, Median, Gaussian, Laplacian, MinusLaplacian, DirectionalH, DirectionalV, SobelCols, SobelRows, MotionBlur, Emboss, Outline
+		};
 	};
 
 	static std::wstring FilterNames[13] = {

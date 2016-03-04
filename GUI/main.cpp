@@ -12,7 +12,17 @@ using namespace GUI;
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK About(HWND, UINT, WPARAM, LPARAM);
 
-std::wstring imageUrl = L"lenna.jpg";
+enum ProcessType
+{
+	GRAYSCALE,
+	FILTER,
+	EQUALIZATION
+} processType;
+std::wstring imageUrl = L"C:\\Users\\David\\Documents\\Visual Studio 2015\\Projects\\PIAD1\\lenna.jpg";
+Cv::FilterType::FilterType filterType = Cv::FilterType::FilterType::Mean;
+Cv::CorrectionMode correctionMode = Cv::CorrectionMode::Cut;
+Cv::EqualizationType equalizationType = Cv::EqualizationType::Simple;
+Cv::GrayScaleType grayScaleType = Cv::GrayScaleType::Mean;
 
 // ISO C++ conformant entry point. The project properties explicitly sets this as the entry point in the manner
 // documented for the linker's /ENTRY option: http://msdn.microsoft.com/en-us/library/f9t8842e.aspx . As per
@@ -59,26 +69,70 @@ int main(int argc, char* argv[]) {
 
 //VOID DrawImage(HDC hdc, std::wstring file, Cv::FilterType filterType, Cv::CorrectionMode correctionMode)
 VOID DrawImage(HDC hdc, std::wstring file)
-
 {
-	Cv::GrayScale *gray = new Cv::GrayScale();
-	gray->SetImage(L"C:\\Users\\David\\Documents\\Visual Studio 2015\\Projects\\PIAD1\\"+file);
-	gray->Luminosity();
-
 	Gdiplus::Graphics graphics(hdc);
+	Cv::GrayScale gimage = Cv::GrayScale();
+	Cv::ImageFilter fimage = Cv::ImageFilter();
+	Cv::Histogram *himage = new Cv::Histogram();
 
-	//Gdiplus::Image image(L"C:\\Users\\David\\Documents\\Visual Studio 2015\\Projects\\PIAD1\\lenna.jpg");
-	//Gdiplus::Image *image = new Gdiplus::Image(gray->GetProcessedImage());
+	switch (processType)
+	{
+	case GRAYSCALE:
+		gimage.SetImage(file);
 
-	Gdiplus::Pen pen(Gdiplus::Color(255, 255, 0, 0), 2);
+		switch (grayScaleType)
+		{
+		case Cv::GrayScaleType::Luminance:
+			gimage.Luminance();
+			graphics.DrawImage(gimage.GetProcessedImage(), 10, 10);
+			gimage.Save(L"luminance.png");
+			break;
+		case Cv::GrayScaleType::Luminosity:
+			gimage.Luminosity();
+			graphics.DrawImage(gimage.GetProcessedImage(), 10, 10);
+			gimage.Save(L"luminosity.png");
+			break;
+		case Cv::GrayScaleType::Mean:
+			gimage.Mean();
+			graphics.DrawImage(gimage.GetProcessedImage(), 10, 10);
+			gimage.Save(L"meangray.png");
+			break;
+		default:
+			break;
+		}
+		break;
+	case FILTER:
+		fimage.SetImage(file);
+		if (filterType != Cv::FilterType::FilterType::Gaussian)
+		{
+			fimage.Filter(filterType, correctionMode);
+		}
+		else 
+		{
+			fimage.Filter(filterType, correctionMode, 0.8);
+		}
+		graphics.DrawImage(fimage.GetProcessedImage(), 10, 10);
+		fimage.Save(Cv::FilterNames[filterType] + L".png");
+		break;
+	case EQUALIZATION:
+		himage->SetImage(file);
+		himage->FillBins();
+		himage->CDF();
+		himage->DrawHistogram();
 
-	graphics.DrawImage(gray->GetProcessedImage(), 10, 10);
-
-	Gdiplus::Rect destRect(256, 256, 150, 75);
-
-	graphics.DrawRectangle(&pen, destRect);
-
-	graphics.DrawImage(gray->GetProcessedImage(), destRect);
+		if (equalizationType != Cv::EqualizationType::Exponential) {
+			himage->Equalize(equalizationType);
+			graphics.DrawImage(himage->GetProcessedImage(), 10, 10);
+			himage->Save(Cv::EqualizationNames[equalizationType] + L".png");
+		}else {	
+			himage->Equalize(Cv::EqualizationType::Exponential, 0.02);
+			graphics.DrawImage(himage->GetProcessedImage(), 10, 10);
+			himage->Save(L"Exponential.png");
+		}
+		break;
+	default:
+		break;
+	}
 }
 
 //
@@ -106,13 +160,113 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 		wmEvent = HIWORD(wParam);
 		// Parse the menu selections:
 		switch (wmId) {
-		case IDM_ABOUT:
-			//DialogBox(WinMainParameters::GetHInstance(), MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
-			imageUrl = L"girl.jpg";
+		//case IDM_ABOUT:
+		//	//DialogBox(WinMainParameters::GetHInstance(), MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+		//	RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_INTERNALPAINT | RDW_ERASE);
+		//	break;
+		case ID_GRAYSCALE_LUMINOSITY:
+			processType = GRAYSCALE;
+			grayScaleType = Cv::GrayScaleType::Luminosity;
 			RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_INTERNALPAINT | RDW_ERASE);
 			break;
-		case ID_GRAYSCALE_LUMINOSITY:
-			imageUrl = L"mandrill.jpg";
+		case ID_GRAYSCALE_LUMINANCE:
+			processType = GRAYSCALE;
+			grayScaleType = Cv::GrayScaleType::Luminance;
+			RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_INTERNALPAINT | RDW_ERASE);
+			break;
+		case ID_GRAYSCALE_MEAN:
+			processType = GRAYSCALE;
+			grayScaleType = Cv::GrayScaleType::Mean;
+			RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_INTERNALPAINT | RDW_ERASE);
+			break;
+		case ID_FILTER_DIRECTIONALH:
+			processType = FILTER;
+			filterType = Cv::FilterType::FilterType::DirectionalH;
+			RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_INTERNALPAINT | RDW_ERASE);
+			break;
+		case ID_FILTER_DIRECTIONALV:
+			processType = FILTER;
+			filterType = Cv::FilterType::FilterType::DirectionalV;
+			RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_INTERNALPAINT | RDW_ERASE);
+			break;
+		case ID_FILTER_EMBOSS:
+			processType = FILTER;
+			filterType = Cv::FilterType::FilterType::Emboss;
+			RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_INTERNALPAINT | RDW_ERASE);
+			break;
+		case ID_FILTER_GAUSSIAN:
+			processType = FILTER;
+			filterType = Cv::FilterType::FilterType::Gaussian;
+			RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_INTERNALPAINT | RDW_ERASE);
+			break;
+		case ID_FILTER_LAPLACIAN:
+			processType = FILTER;
+			filterType = Cv::FilterType::FilterType::Laplacian;
+			RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_INTERNALPAINT | RDW_ERASE);
+			break;
+		case ID_FILTER_MEAN:
+			processType = FILTER;
+			filterType = Cv::FilterType::FilterType::Mean;
+			RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_INTERNALPAINT | RDW_ERASE);
+			break;
+		case ID_FILTER_MEDIAN:
+			processType = FILTER;
+			filterType = Cv::FilterType::FilterType::Median;
+			RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_INTERNALPAINT | RDW_ERASE);
+			break;
+		case ID_FILTER_MINUSLAPLACIAN:
+			processType = FILTER;
+			filterType = Cv::FilterType::FilterType::MinusLaplacian;
+			RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_INTERNALPAINT | RDW_ERASE);
+			break;
+		case ID_FILTER_MOTIONBLUR:
+			processType = FILTER;
+			filterType = Cv::FilterType::FilterType::MotionBlur;
+			RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_INTERNALPAINT | RDW_ERASE);
+			break;
+		case ID_FILTER_OUTLINE:
+			processType = FILTER;
+			filterType = Cv::FilterType::FilterType::Outline;
+			RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_INTERNALPAINT | RDW_ERASE);
+			break;
+		case ID_FILTER_SOBELCOLS:
+			processType = FILTER;
+			filterType = Cv::FilterType::FilterType::SobelCols;
+			RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_INTERNALPAINT | RDW_ERASE);
+			break;
+		case ID_FILTER_SOBELROWS:
+			processType = FILTER;
+			filterType = Cv::FilterType::FilterType::SobelRows;
+			RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_INTERNALPAINT | RDW_ERASE);
+			break;
+		case ID_FILTER_WEIGHTEDMEAN:
+			processType = FILTER;
+			filterType = Cv::FilterType::FilterType::WeightedMean;
+			RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_INTERNALPAINT | RDW_ERASE);
+			break;
+		case ID_EQUALIZATION_EXPONENTIAL:
+			processType = EQUALIZATION;
+			equalizationType = Cv::EqualizationType::Exponential;
+			RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_INTERNALPAINT | RDW_ERASE);
+			break;
+		case ID_EQUALIZATION_GENERAL:
+			processType = EQUALIZATION;
+			equalizationType = Cv::EqualizationType::General;
+			RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_INTERNALPAINT | RDW_ERASE);
+			break;
+		case ID_EQUALIZATION_SIMPLE:
+			processType = EQUALIZATION;
+			equalizationType = Cv::EqualizationType::Simple;
+			RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_INTERNALPAINT | RDW_ERASE);
+			break;
+		case ID_EQUALIZATION_STRETCHING:
+			processType = EQUALIZATION;
+			equalizationType = Cv::EqualizationType::Stretching;
+			RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_INTERNALPAINT | RDW_ERASE);
+			break;
+		case ID_EQUALIZATION_UNIFORM:
+			processType = EQUALIZATION;
+			equalizationType = Cv::EqualizationType::Uniform;
 			RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_INTERNALPAINT | RDW_ERASE);
 			break;
 		case IDM_EXIT:

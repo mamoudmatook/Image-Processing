@@ -27,7 +27,7 @@ namespace Cv {
 		void CDF();
 		void DrawHistogram();
 		void Equalize(EqualizationType equalizationType, double alpha = 1.0);
-		bool Save(std::wstring filename, std::wstring mimeType);
+		bool Save(std::wstring filename, std::wstring mimeType = L"image/png");
 
 		Gdiplus::Bitmap* GetRedHistogram();
 		Gdiplus::Bitmap* GetGreenHistogram();
