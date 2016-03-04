@@ -12,6 +12,8 @@ using namespace GUI;
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK About(HWND, UINT, WPARAM, LPARAM);
 
+std::wstring imageUrl = L"lenna.jpg";
+
 // ISO C++ conformant entry point. The project properties explicitly sets this as the entry point in the manner
 // documented for the linker's /ENTRY option: http://msdn.microsoft.com/en-us/library/f9t8842e.aspx . As per
 // the documentation, the value set as the entry point is "mainCRTStartup", not "main". Every C or C++ program
@@ -55,6 +57,30 @@ int main(int argc, char* argv[]) {
 	return mainWindow.Join(hAccelTable);
 }
 
+//VOID DrawImage(HDC hdc, std::wstring file, Cv::FilterType filterType, Cv::CorrectionMode correctionMode)
+VOID DrawImage(HDC hdc, std::wstring file)
+
+{
+	Cv::GrayScale *gray = new Cv::GrayScale();
+	gray->SetImage(L"C:\\Users\\David\\Documents\\Visual Studio 2015\\Projects\\PIAD1\\"+file);
+	gray->Luminosity();
+
+	Gdiplus::Graphics graphics(hdc);
+
+	//Gdiplus::Image image(L"C:\\Users\\David\\Documents\\Visual Studio 2015\\Projects\\PIAD1\\lenna.jpg");
+	//Gdiplus::Image *image = new Gdiplus::Image(gray->GetProcessedImage());
+
+	Gdiplus::Pen pen(Gdiplus::Color(255, 255, 0, 0), 2);
+
+	graphics.DrawImage(gray->GetProcessedImage(), 10, 10);
+
+	Gdiplus::Rect destRect(256, 256, 150, 75);
+
+	graphics.DrawRectangle(&pen, destRect);
+
+	graphics.DrawImage(gray->GetProcessedImage(), destRect);
+}
+
 //
 //  FUNCTION: WndProc(HWND, UINT, WPARAM, LPARAM)
 //
@@ -70,6 +96,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 	PAINTSTRUCT ps;
 	HDC hdc;
 
+	Gdiplus::GdiplusStartupInput gdiplusStartupInput;
+	ULONG_PTR gdiplusToken;
+	Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
+
 	switch (message) {
 	case WM_COMMAND:
 		wmId = LOWORD(wParam);
@@ -77,7 +107,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 		// Parse the menu selections:
 		switch (wmId) {
 		case IDM_ABOUT:
-			DialogBox(WinMainParameters::GetHInstance(), MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+			//DialogBox(WinMainParameters::GetHInstance(), MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+			imageUrl = L"girl.jpg";
+			RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_INTERNALPAINT | RDW_ERASE);
+			break;
+		case ID_GRAYSCALE_LUMINOSITY:
+			imageUrl = L"mandrill.jpg";
+			RedrawWindow(hWnd, NULL, NULL, RDW_INVALIDATE | RDW_INTERNALPAINT | RDW_ERASE);
 			break;
 		case IDM_EXIT:
 			DestroyWindow(hWnd);
@@ -89,29 +125,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 	case WM_PAINT:
 		hdc = BeginPaint(hWnd, &ps);
 		{
-			RECT clientRect;
-			GetClientRect(hWnd, &clientRect);
-			// HGDIOBJ objects obtained from GetStockObject do not need to be deleted with DeleteObject as per the documentation: https://msdn.microsoft.com/en-us/library/dd144925(v=vs.85).aspx
-			HGDIOBJ whiteBrushGDIObj = GetStockObject(WHITE_BRUSH);
-			if (whiteBrushGDIObj == nullptr || GetObjectType(whiteBrushGDIObj) != OBJ_BRUSH) {
-				PostQuitMessage(1);
-			}
-			else {
-				HBRUSH whiteBrush = static_cast<HBRUSH>(whiteBrushGDIObj);
-				FillRect(hdc, &clientRect, whiteBrush);
-				COLORREF blackTextColor = 0x00000000;
-				if (SetTextColor(hdc, blackTextColor) == CLR_INVALID) {
-					PostQuitMessage(1);
-				}
-				else {
-					const wchar_t helloWorldString[] = L"Hello world!";
-					DrawTextW(hdc, helloWorldString, ARRAYSIZE(helloWorldString), &clientRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOCLIP);
-				}
-			}
+			DrawImage(hdc, imageUrl);
 		}
 		EndPaint(hWnd, &ps);
+		
 		break;
 	case WM_DESTROY:
+		Gdiplus::GdiplusShutdown(gdiplusToken);
 		PostQuitMessage(0);
 		break;
 	default:
