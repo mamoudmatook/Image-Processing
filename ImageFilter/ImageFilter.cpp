@@ -1,33 +1,6 @@
 // ImageFilter.cpp : Defines the exported functions for the DLL application.
 #include "ImageFilter.h"
 
-	Cv::ImageFilter::ImageFilter()
-	{
-		Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
-	}
-
-	Cv::ImageFilter::~ImageFilter()
-	{
-		Gdiplus::GdiplusShutdown(this->gdiplusToken);
-		delete this->originalImage;
-		delete this->filteredImage;
-	}
-
-	bool Cv::ImageFilter::SetImage(std::wstring fileUri)
-	{
-		this->originalImage = new Gdiplus::Bitmap(fileUri.c_str());
-
-		if (this->originalImage->GetPixelFormat() != PixelFormat24bppRGB) {
-			return false;
-		}
-
-		this->GetImageDimensions();
-
-		this->filteredImage = new Gdiplus::Bitmap(this->imageWidth, this->imageHeight, PixelFormat24bppRGB);
-
-		return true;
-	}
-
 	void Cv::ImageFilter::SetKernel(FilterType filterType)
 	{
 		//std::fill(std::begin(kernel), std::end(kernel), 0);
@@ -152,7 +125,7 @@
 						break;
 					}
 
-					this->filteredImage->SetPixel(x, y, *newColor);
+					this->processedImage->SetPixel(x, y, *newColor);
 
 					delete newColor;
 				}
@@ -197,67 +170,7 @@
 				}
 
 				//centro es el nuevo pixel
-				this->filteredImage->SetPixel(x, y, kernel[4]);
+				this->processedImage->SetPixel(x, y, kernel[4]);
 			}
 		}
 	};
-
-	bool Cv::ImageFilter::Save(std::wstring filename)
-	{
-		try 
-		{
-			CLSID pngClsid;
-			GetEncoderClsid(L"image/png", &pngClsid);
-			this->filteredImage->Save(filename.c_str(), &pngClsid, NULL);
-		}
-		catch (...)
-		{
-			return false;
-		}
-		return true;
-	}
-
-	Gdiplus::Bitmap* Cv::ImageFilter::GetFilteredImage()
-	{
-		return this->filteredImage;
-	}
-
-	void Cv::ImageFilter::GetImageDimensions()
-	{
-		this->imageWidth = this->originalImage->GetWidth();
-		this->imageHeight = this->originalImage->GetHeight();
-		this->totalPixels = this->imageWidth * this->imageHeight;
-		this->rect = new Gdiplus::Rect(0, 0, this->imageWidth, this->imageHeight);
-	}
-
-	int Cv::ImageFilter::GetEncoderClsid(const WCHAR* format, CLSID* pClsid) {
-		UINT num = 0; // number of image encoders
-		UINT size = 0; // size of the image encoder array in bytes 
-
-		Gdiplus::ImageCodecInfo* pImageCodecInfo = NULL;
-		Gdiplus::GetImageEncodersSize(&num, &size);
-
-		if (size == 0) {
-			return -1; // Failure
-		}
-
-		pImageCodecInfo = (Gdiplus::ImageCodecInfo*)(malloc(size));
-
-		if (pImageCodecInfo == NULL) {
-			return -1; // Failure 
-		}
-
-		Gdiplus::GetImageEncoders(num, size, pImageCodecInfo);
-
-		for (UINT j = 0; j < num; ++j)
-		{
-			if (wcscmp(pImageCodecInfo[j].MimeType, format) == 0)
-			{
-				*pClsid = pImageCodecInfo[j].Clsid;
-				free(pImageCodecInfo);
-				return j; // Success 
-			}
-		}
-		free(pImageCodecInfo);
-		return 0; // Failure 
-	}

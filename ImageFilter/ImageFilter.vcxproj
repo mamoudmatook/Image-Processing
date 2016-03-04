@@ -149,6 +149,7 @@
     <ClInclude Include="GrayScale.h" />
     <ClInclude Include="Histogram.h" />
     <ClInclude Include="ImageFilter.h" />
+    <ClInclude Include="ImageProcessing.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -172,6 +173,7 @@
     <ClCompile Include="GrayScale.cpp" />
     <ClCompile Include="Histogram.cpp" />
     <ClCompile Include="ImageFilter.cpp" />
+    <ClCompile Include="ImageProcessing.cpp" />
     <ClCompile Include="stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
